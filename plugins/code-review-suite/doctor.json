@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "plugin": "code-review-suite",
+  "setup": "/code-review-suite:setup",
+  "config": {
+    "key": "code-review-suite",
+    "required": [],
+    "optional": ["techStack"]
+  },
+  "commands": [
+    { "name": "git", "required": true }
+  ]
+}

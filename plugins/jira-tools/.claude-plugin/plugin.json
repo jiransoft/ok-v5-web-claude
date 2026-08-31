@@ -1,0 +1,9 @@
+{
+  "name": "jira-tools",
+  "version": "0.1.0",
+  "description": "Jira 이슈 자동 생성, 분석, 구현",
+  "author": {
+    "name": "okep"
+  },
+  "keywords": ["jira", "issue-tracking"]
+}

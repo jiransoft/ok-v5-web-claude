@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "plugin": "runtime-verify",
+  "setup": "/runtime-verify:setup",
+  "config": {
+    "key": "runtime-verify",
+    "required": ["modules"],
+    "optional": ["projectKey", "credentialsFile", "portBase", "worktreeBase", "ui", "prepare"]
+  },
+  "files": [],
+  "commands": [
+    { "name": "git", "required": true },
+    { "name": "curl", "required": true },
+    { "name": "lsof", "required": true }
+  ],
+  "mcp": [
+    { "server": "playwright", "required": true, "usedBy": "verify-stack 브라우저 검증" }
+  ]
+}

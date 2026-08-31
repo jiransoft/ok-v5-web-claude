@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "plugin": "jira-tools",
+  "setup": "/jira-tools:setup",
+  "config": {
+    "key": "jira-tools",
+    "required": [
+      "projectKey",
+      "baseUrl",
+      "email",
+      "apiTokenFile"
+    ],
+    "optional": [
+      "cloudId",
+      "assignee",
+      "issueTypes",
+      "components",
+      "customFields",
+      "projects"
+    ]
+  },
+  "files": [
+    {
+      "path": "~/.jira-token",
+      "required": true,
+      "mode": "600",
+      "usedBy": "전체",
+      "hint": "https://id.atlassian.com/manage-profile/security/api-tokens"
+    }
+  ],
+  "commands": [
+    {
+      "name": "curl",
+      "required": true
+    },
+    {
+      "name": "jq",
+      "required": true,
+      "install": "brew install jq"
+    },
+    {
+      "name": "git",
+      "required": true
+    },
+    {
+      "name": "pandoc",
+      "required": false,
+      "install": "brew install pandoc",
+      "note": "미설치 시 댓글이 {code} 블록으로 폴백"
+    }
+  ]
+}

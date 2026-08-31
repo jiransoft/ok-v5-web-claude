@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "plugin": "postman-tools",
+  "setup": "/postman-tools:setup",
+  "config": {
+    "key": "postman-tools",
+    "required": [
+      "workspaceId",
+      "workspaceName",
+      "apiKey"
+    ],
+    "optional": [
+      "backendStack",
+      "services",
+      "collectionUid"
+    ]
+  },
+  "commands": [
+    {
+      "name": "git",
+      "required": true,
+      "note": "브랜치 diff 로 변경된 컨트롤러 추적"
+    },
+    {
+      "name": "curl",
+      "required": true
+    },
+    {
+      "name": "jq",
+      "required": true,
+      "install": "brew install jq"
+    },
+    {
+      "name": "python3",
+      "required": true,
+      "note": "컬렉션 JSON 편집"
+    }
+  ]
+}

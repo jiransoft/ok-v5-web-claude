@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "plugin": "git-workflow",
+  "setup": "/git-workflow:setup",
+  "config": {
+    "key": "git-workflow",
+    "required": [],
+    "optional": ["defaultAssignee", "defaultReviewer", "defaultLabels", "moduleRoot", "project", "commit"]
+  },
+  "files": [],
+  "commands": [
+    { "name": "git", "required": true },
+    { "name": "gh", "required": true, "install": "brew install gh", "note": "create-pr·dev-report 가 사용. gh auth status 로 인증 확인" }
+  ],
+  "hooks": [
+    { "event": "UserPromptSubmit", "script": "hooks/commit-router.sh", "selfTest": "hooks/test-commit-router.sh" }
+  ]
+}

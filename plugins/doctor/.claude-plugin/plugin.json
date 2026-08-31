@@ -1,0 +1,9 @@
+{
+  "name": "doctor",
+  "version": "0.1.0",
+  "description": "설치된 플러그인의 설정·토큰·CLI·MCP·훅 배선을 진단하고 조치를 안내",
+  "author": {
+    "name": "okep"
+  },
+  "keywords": ["doctor", "diagnostics", "setup", "health-check"]
+}

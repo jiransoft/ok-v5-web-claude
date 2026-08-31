@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "plugin": "release-tools",
+  "setup": "/release-tools:setup",
+  "config": {
+    "key": "release-tools",
+    "required": [],
+    "optional": ["project", "swaggerBaseUrl", "modules"]
+  },
+  "commands": [
+    { "name": "git", "required": true },
+    { "name": "gh", "required": true, "install": "brew install gh", "note": "release-note 가 GitHub Release 등록에 사용. gh auth status 로 인증 확인" }
+  ]
+}

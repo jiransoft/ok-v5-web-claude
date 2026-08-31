@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "plugin": "hud",
+  "setup": "/hud:setup",
+  "files": [
+    { "path": "~/.claude/hud/hud.mjs", "required": true, "usedBy": "statusline", "hint": "/hud:setup 이 설치하는 안정 런처" }
+  ],
+  "commands": [
+    { "name": "node", "required": true, "minVersion": 20 }
+  ],
+  "settings": [
+    { "path": "statusLine.command", "contains": "hud/hud.mjs", "fix": "/hud:setup" }
+  ]
+}

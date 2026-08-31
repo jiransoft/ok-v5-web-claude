@@ -1,0 +1,9 @@
+{
+  "name": "figma-tools",
+  "version": "0.1.0",
+  "description": "Figma 코멘트 조회·작성·삭제 등 Figma 코멘트 관리 도구",
+  "author": {
+    "name": "okep"
+  },
+  "keywords": ["figma", "comment"]
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "plugin": "figma-tools",
+  "setup": "/figma-tools:setup",
+  "config": {
+    "key": "figma-tools",
+    "required": [],
+    "optional": ["tokenFile"]
+  },
+  "files": [
+    { "path": "~/.figma-token", "required": true, "mode": "600", "usedBy": "figma-comment", "hint": "https://www.figma.com/developers/api#access-tokens" },
+    { "path": "~/.figma-session", "required": false, "mode": "600", "usedBy": "figma-comment @멘션 자동화" }
+  ],
+  "commands": [
+    { "name": "curl", "required": true },
+    { "name": "node", "required": true },
+    { "name": "playwright-cli", "required": false, "install": "npm install -g @playwright/cli", "note": "@멘션 자동화에만 필요" }
+  ]
+}

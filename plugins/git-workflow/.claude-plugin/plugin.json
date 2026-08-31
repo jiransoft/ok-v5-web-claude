@@ -1,0 +1,9 @@
+{
+  "name": "git-workflow",
+  "version": "0.1.0",
+  "description": "GitHub PR 생성, 커밋, 개발 리포트 등 GitHub 워크플로우 자동화",
+  "author": {
+    "name": "okep"
+  },
+  "keywords": ["github", "pull-request", "commit", "dev-report"]
+}

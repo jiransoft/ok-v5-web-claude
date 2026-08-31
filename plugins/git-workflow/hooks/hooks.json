@@ -1,0 +1,16 @@
+{
+  "description": "커밋 실행 요청을 commit 스킬로 라우팅한다.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/commit-router.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
