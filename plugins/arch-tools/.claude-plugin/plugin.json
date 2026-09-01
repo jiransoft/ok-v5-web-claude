@@ -1,6 +1,6 @@
 {
   "name": "arch-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "코드 분석 기반 아키텍처 문서화 — ADR(설계 의사결정 기록)과 Mermaid 다이어그램/PDF 생성",
   "author": {
     "name": "okep"

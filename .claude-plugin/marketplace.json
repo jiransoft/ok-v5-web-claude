@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Claude Code 플러그인 모음: 상태줄, GitHub, Jira, Figma 연동 및 코드 리뷰 워크플로우",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "hud",
       "source": "./plugins/hud",
       "description": "Claude 구독 사용량(rate limit) + 컨텍스트/모델/비용 + 네이티브 Task 진행률을 보여주는 statusline (clean-room, 의존성 0)",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "utility",
       "tags": [
         "statusline",
@@ -26,7 +26,7 @@
       "name": "git-workflow",
       "source": "./plugins/git-workflow",
       "description": "GitHub PR 생성, 커밋, 개발 리포트 등 GitHub 워크플로우 자동화",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "devops",
       "tags": [
         "github",
@@ -39,7 +39,7 @@
       "name": "release-tools",
       "source": "./plugins/release-tools",
       "description": "git 태그 간 변경 분석으로 FE팀 공유용 릴리즈 노트를 작성하고 GitHub Release에 등록",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "devops",
       "tags": [
         "release",
@@ -52,7 +52,7 @@
       "name": "jira-tools",
       "source": "./plugins/jira-tools",
       "description": "Jira 이슈 자동 생성, 분석, 구현",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "project-management",
       "tags": [
         "jira",
@@ -63,7 +63,7 @@
       "name": "figma-tools",
       "source": "./plugins/figma-tools",
       "description": "Figma 코멘트 조회·작성·삭제 등 Figma 코멘트 관리 도구",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "design",
       "tags": [
         "figma",
@@ -74,7 +74,7 @@
       "name": "arch-tools",
       "source": "./plugins/arch-tools",
       "description": "코드 분석 기반 아키텍처 문서화 — ADR(설계 의사결정 기록)과 Mermaid 다이어그램/PDF 생성",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "documentation",
       "tags": [
         "architecture",
@@ -88,7 +88,7 @@
       "name": "code-review-suite",
       "source": "./plugins/code-review-suite",
       "description": "4인 병렬 코드 리뷰 (Design/Logic/Performance/Test) 에이전트 + 통합 리뷰 스킬",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "code-quality",
       "tags": [
         "code-review",
@@ -102,7 +102,7 @@
       "name": "postman-tools",
       "source": "./plugins/postman-tools",
       "description": "Postman 컬렉션 request 생성/수정, example 자동 생성, docs/request 설정 검증 등 Postman 관련 자동화",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "api",
       "tags": [
         "postman",
@@ -115,7 +115,7 @@
       "name": "visualize",
       "source": "./plugins/visualize",
       "description": "기술 개념을 공식 문서 근거 + 우리 레포 실측 매칭으로 설명하고, 실행 데모·인터랙티브 HTML로 보여준다(기본). --text 시 텍스트만",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "learning",
       "tags": [
         "explain",
@@ -130,7 +130,7 @@
       "name": "doctor",
       "source": "./plugins/doctor",
       "description": "설치된 플러그인의 설정·토큰·CLI·MCP·훅 배선을 진단하고 조치를 안내",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "utility",
       "tags": [
         "doctor",
@@ -143,7 +143,7 @@
       "name": "runtime-verify",
       "source": "./plugins/runtime-verify",
       "description": "Jira 이슈·브랜치별 포트 블록으로 애플리케이션 모듈을 병렬 기동하고 브라우저로 검증 시나리오를 확인",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "testing",
       "tags": [
         "verify",

@@ -1,6 +1,6 @@
 {
   "name": "postman-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Postman 컬렉션 request 생성/수정, example 자동 생성, docs/request 설정 검증 등 Postman 관련 자동화",
   "author": {
     "name": "okep"
