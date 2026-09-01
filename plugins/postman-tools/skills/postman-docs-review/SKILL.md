@@ -40,10 +40,16 @@ Postman 컬렉션의 **request 설정**(URL, query params, body 예시)과 **doc
       "api": "{{API-HOST}}",
       "checkout": "{{CHECKOUT-HOST}}"
     },
-    "collectionUid": "owner-uuid"             // Postman 컬렉션 UID (선택)
+    "collections": {                          // 별칭 → 컬렉션 UID (owner-uuid, 선택)
+      "api": "owner-uuid",
+      "checkout": "owner-uuid2"
+    }
   }
 }
 ```
+`collections` 는 **별칭 → 컬렉션 UID** 맵이다 (별칭은 팀이 자유롭게, `services` 키와 맞추면 서비스명으로
+컬렉션까지 라우팅된다). 대상 컬렉션 결정: 인자/URL > 별칭·UID 직접 지정 > `collections` 가 1개면 자동 >
+복수면 문맥(서비스명·별칭 언급)으로 추론, 애매하면 별칭 목록으로 질문.
 
 > Jackson 네이밍 전략은 `plugins.json`에 두지 않는다. 아래 **네이밍 규칙** 섹션의 감지 절차를 따라 프로젝트 설정에서 직접 판별한다.
 
@@ -82,7 +88,8 @@ Jackson 네이밍 전략 감지 절차와 전략별 규칙표는 플러그인 �
 
 1. 대상 컬렉션을 결정한다:
    - Postman URL이 제공된 경우: URL에서 workspace ID, folder ID 파싱
-   - 인자 없이 실행된 경우: `.claude/plugins.json`의 `postman-tools.collectionUid`를 기본 컬렉션으로 사용한다. 미설정이면 AskUserQuestion으로 질문한다
+   - 인자 없이 실행된 경우: `.claude/plugins.json`의 `postman-tools.collections` 를 읽어 —
+     **1개면 자동**, 복수면 문맥(서비스명·별칭)으로 추론하고 애매하면 별칭 목록으로 질문한다. 미설정이면 AskUserQuestion으로 질문한다
 2. Postman REST API로 컬렉션 가져오기:
    ```bash
    curl -s "https://api.getpostman.com/collections/{owner}-{uuid}" \
@@ -425,6 +432,6 @@ Postman에 없는 endpoint를 **신규 생성 대상**으로 보고한다. Contr
 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
 **권고 대상:**
-- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `workspaceId`, `workspaceName`, `apiKey`, `backendStack`, `services`, `collectionUid`
+- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `workspaceId`, `workspaceName`, `apiKey`, `backendStack`, `services`, `collections`
 - **제외**: CLI 인자로 받은 값(`--source`, `--base`, Postman URL), AI 가 자동 판단한 값 (네이밍 전략, 불일치 보고서 본문)
 

@@ -21,8 +21,8 @@ Postman 컬렉션 관리를 자동화하는 skill 모음. **Postman REST API 직
     "services": {
       "api": "{{API-HOST}}"
     },
-    "collectionUid": "<owner>-<uuid>",
-    "apiKeyFile": "~/.postman-api-key"
+    "collections": { "api": "<owner>-<uuid>" },
+    "apiKey": "PMAK-..."
   }
 }
 ```

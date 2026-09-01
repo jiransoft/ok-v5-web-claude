@@ -220,7 +220,7 @@ echo '.claude/plugins.json' >> .gitignore
 | **jira-tools** | `baseUrl`, `email`, `apiTokenFile`, `projects` | `cloudId` — 프로젝트별 값(assignee·issueTypes·components·customFields)은 `projects.<키>` 안에 |
 | **git-workflow** | — | `defaultAssignee`, `defaultReviewer`, `defaultLabels`, `moduleRoot`, `project`, `commit` |
 | **release-tools** | — | `project`, `swaggerBaseUrl`, `modules` |
-| **postman-tools** | `workspaceId`, `workspaceName`, `apiKey` | `backendStack`, `services`, `collectionUid` |
+| **postman-tools** | `workspaceId`, `workspaceName`, `apiKey` | `backendStack`, `services`, `collections`(별칭→컬렉션 UID 맵) |
 | **figma-tools** | — | `tokenFile` |
 | **code-review-suite** | — | `techStack` |
 | **runtime-verify** | `modules` | `projectKey`, `credentialsFile`, `portBase`, `worktreeBase`, `ui`, `prepare` |
@@ -271,7 +271,10 @@ echo '.claude/plugins.json' >> .gitignore
     "apiKey": "PMAK-...",                          // Postman API Key
     "backendStack": "Kotlin Spring Boot",
     "services": { "api": "{{API-HOST}}", "checkout": "{{CHECKOUT-HOST}}" },
-    "collectionUid": "owner-uuid"
+    "collections": {                               // 별칭 → 컬렉션 UID (services 키와 맞추면 라우팅 연동)
+      "api": "owner-uuid",
+      "checkout": "owner-uuid2"
+    }
   },
   "figma-tools": {
     "tokenFile": "~/.figma-token"

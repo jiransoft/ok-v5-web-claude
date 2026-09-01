@@ -31,7 +31,7 @@ Read 도구로 `.claude/plugins.json`의 `postman-tools` 섹션을 읽는다. �
 
 **필수 설정:**
 - `apiKey` — Postman API 키 (`PMAK-...`). 컬렉션 owner와 동일 계정이어야 함.
-- `collectionUid` — 기본 컬렉션 UID (선택, `--collection`으로 오버라이드 가능)
+- `collections` — **별칭 → 컬렉션 UID** 맵 (선택). `--collection <별칭|UID>` 로 오버라이드 가능
 
 **Jackson 네이밍 전략 감지 (example 생성 전 필수):**
 
@@ -88,9 +88,10 @@ ROOT=/tmp/wt-postman-example        # --source 미지정 시: ROOT=$(git rev-par
 ### 1단계: 대상 request 식별
 
 - 대상 컬렉션을 결정한다:
-  - 컬렉션 이름 또는 ID가 직접 제공된 경우: 그대로 사용한다
-  - 미제공 시: Read 도구로 `.claude/plugins.json`의 `postman-tools.collectionUid`를 기본 컬렉션으로 사용한다
-  - 둘 다 없으면 Postman REST API로 탐색하여 사용자에게 선택지를 제시한다:
+  - 컬렉션 별칭·이름·UID가 직접 제공된 경우: 그대로 사용한다 (`collections` 의 별칭이면 UID 로 해석)
+  - 미제공 시: Read 도구로 `.claude/plugins.json`의 `postman-tools.collections` 를 읽어 —
+    **1개면 그것을 자동 사용**, 복수면 문맥(서비스명·별칭 언급)으로 추론하고 애매하면 별칭 목록으로 질문한다
+  - `collections` 가 없으면 Postman REST API로 탐색하여 사용자에게 선택지를 제시한다:
     ```bash
     # 워크스페이스 목록
     curl -s "https://api.getpostman.com/workspaces" -H "X-Api-Key: ${apiKey}"
@@ -248,6 +249,6 @@ request 30개 → 도메인별 5그룹 → subagent 5개 병렬 실행
 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
 **권고 대상:**
-- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `workspaceId`, `workspaceName`, `apiKey`, `collectionUid`
+- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `workspaceId`, `workspaceName`, `apiKey`, `collections`
 - **제외**: CLI 인자로 받은 값(request 이름/컬렉션), AI 가 자동 판단한 값 (네이밍 전략, 생성된 example body)
 

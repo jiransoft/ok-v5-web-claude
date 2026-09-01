@@ -41,10 +41,16 @@ Postman 컬렉션의 **request**를 생성하거나 수정한다. URL, query par
       "api": "{{API-HOST}}",
       "checkout": "{{CHECKOUT-HOST}}"
     },
-    "collectionUid": "owner-uuid"            // Postman 컬렉션 UID (선택)
+    "collections": {                         // 별칭 → 컬렉션 UID (owner-uuid, 선택)
+      "api": "owner-uuid",
+      "checkout": "owner-uuid2"
+    }
   }
 }
 ```
+`collections` 는 **별칭 → 컬렉션 UID** 맵이다 (별칭은 팀이 자유롭게, `services` 키와 맞추면 서비스명으로
+컬렉션까지 라우팅된다). 대상 컬렉션 결정: 인자/URL > 별칭·UID 직접 지정 > `collections` 가 1개면 자동 >
+복수면 문맥(서비스명·별칭 언급)으로 추론, 애매하면 별칭 목록으로 질문.
 
 > Jackson 네이밍 전략은 `plugins.json`에 두지 않는다. 아래 **네이밍 규칙** 섹션의 감지 절차를 따라 프로젝트 설정에서 직접 판별한다.
 
@@ -195,6 +201,6 @@ curl -X PUT "https://api.getpostman.com/collections/{owner}-{uuid}" \
 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
 **권고 대상:**
-- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `workspaceId`, `workspaceName`, `apiKey`, `services`, `collectionUid`
+- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `workspaceId`, `workspaceName`, `apiKey`, `services`, `collections`
 - **제외**: CLI 인자로 받은 값(`--source`, `--request`, Postman URL), AI 가 자동 판단한 값 (네이밍 전략, URL/params/body 구성, docs 본문)
 
