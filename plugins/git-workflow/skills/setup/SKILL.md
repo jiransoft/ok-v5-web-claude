@@ -38,6 +38,9 @@ command -v gh && gh api user -q .login 2>/dev/null          # 인증돼 있으�
 ```
 
 - `project` ← origin URL에서 `owner/repo` 추출(`.git` 제거, ssh/https 모두 처리).
+  **호스트가 `github.com` 이 아니면(사내 GitLab 등) `project` 를 채우지 않는다** — 그 레포는 아직
+  GitHub 에 없어 create-pr 를 쓸 수 없다. "GitHub 이관 후 setup 재실행" 을 안내하고 나머지 셋업은 계속한다
+  (commit 스킬은 원격 호스트와 무관하게 동작한다).
 - `moduleRoot` ← 모노레포면 `apps/`·`packages/` 같은 최상위 디렉터리를 후보로 제시(사용자 확인).
 
 ### 2-2. 나머지 값 입력받기

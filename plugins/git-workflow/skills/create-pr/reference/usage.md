@@ -57,6 +57,7 @@
   9. PR URL 출력
 
 사전 조건:
+  - 저장소 origin 이 GitHub 일 것
   - gh CLI 설치 (brew install gh)
   - GitHub 인증 완료 (gh auth login, 또는 GH_TOKEN 환경변수)
 ```

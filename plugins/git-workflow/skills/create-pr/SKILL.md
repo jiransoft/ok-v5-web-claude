@@ -17,6 +17,8 @@ argument-hint: "[--target <branch>] [--source <branch>] [--base <branch>] [-a <u
 ## 사전 조건
 
 - `gh` CLI가 설치되어 있어야 한다
+- **저장소 origin 이 GitHub 이어야 한다** — `git remote get-url origin` 의 호스트가 `github.com` 이
+  아니면(사내 GitLab 등) PR 을 만들 수 없다. 사용자에게 안내하고 중단한다
 - GitHub 인증이 완료되어 있어야 한다 (`gh auth status`로 확인)
   - 인증이 안 되어 있으면 `gh auth login` 을 안내하고 중단한다 (비대화형 환경은 `GH_TOKEN` 환경변수로 대체 가능)
 
