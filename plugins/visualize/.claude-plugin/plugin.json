@@ -1,6 +1,6 @@
 {
   "name": "visualize",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "기술 개념을 공식 문서 근거 + 우리 레포 실측 매칭으로 설명하고, 실행 데모·인터랙티브 HTML로 보여준다(기본). --text 시 텍스트만",
   "author": {
     "name": "okep"

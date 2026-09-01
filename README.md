@@ -12,11 +12,11 @@ Claude Code 플러그인 마켓플레이스 — GitHub·Jira·Figma·Postman 연
 
 | Plugin | 설명 | 주요 스킬 | Version |
 |--------|------|-----------|---------|
-| **git-workflow** | GitHub PR 생성·커밋·개발 리포트 등 워크플로우 자동화 | `create-pr`, `dev-report`, `commit` | 0.2.0 |
-| **jira-tools** | Jira 이슈 자동 생성·분석·구현 | `create-jira-issue`, `resolve-issue`, `impl-issue` | 0.2.0 |
-| **code-review-suite** | 4인 병렬 코드 리뷰 (Design/Logic/Performance/Test) 에이전트 + 통합 리뷰 스킬 | `code-review` | 0.2.0 |
-| **runtime-verify** | Jira 이슈·브랜치별 포트 블록으로 애플리케이션 모듈을 병렬 기동하고 브라우저로 검증 시나리오를 확인 (detached worktree, context 격리) | `verify-stack` | 0.2.0 |
-| **doctor** | 설치된 플러그인의 설정·토큰·CLI·MCP·훅 배선을 진단하고 조치를 안내 (플러그인별 `doctor.json` 기반) | `check` | 0.2.0 |
+| **git-workflow** | GitHub PR 생성·커밋·개발 리포트 등 워크플로우 자동화 | `create-pr`, `dev-report`, `commit` | 0.3.0 |
+| **jira-tools** | Jira 이슈 자동 생성·분석·구현 | `create-jira-issue`, `resolve-issue`, `impl-issue` | 0.3.0 |
+| **code-review-suite** | 4인 병렬 코드 리뷰 (Design/Logic/Performance/Test) 에이전트 + 통합 리뷰 스킬 | `code-review` | 0.3.0 |
+| **runtime-verify** | Jira 이슈·브랜치별 포트 블록으로 애플리케이션 모듈을 병렬 기동하고 브라우저로 검증 시나리오를 확인 (detached worktree, context 격리) | `verify-stack` | 0.3.0 |
+| **doctor** | 설치된 플러그인의 설정·토큰·CLI·MCP·훅 배선을 진단하고 조치를 안내 (플러그인별 `doctor.json` 기반) | `check` | 0.3.0 |
 
 ### 개인 선택 6종
 
@@ -24,12 +24,12 @@ Claude Code 플러그인 마켓플레이스 — GitHub·Jira·Figma·Postman 연
 
 | Plugin | 설명 | 주요 스킬 | Version |
 |--------|------|-----------|---------|
-| **hud** | Claude 구독 사용량(rate limit) + 컨텍스트/모델/비용 + 네이티브 Task 진행률 상태줄 (clean-room, 의존성 0) | `setup` | 0.2.0 |
-| **release-tools** | git 태그 간 변경 분석으로 FE팀 공유용 릴리즈 노트를 작성하고 GitHub Release에 등록 (릴리즈 담당자용) | `release-note` | 0.2.0 |
-| **visualize** | 기술 개념을 공식 문서 근거 + 레포 실측으로 설명하고 인터랙티브 HTML로 시연 (`--text` 시 텍스트만) | `showme` | 0.2.0 |
-| **arch-tools** | 코드 분석 기반 아키텍처 문서화 (ADR·Mermaid 다이어그램/PDF) | `adr`, `diagram` | 0.2.0 |
-| **postman-tools** | Postman 컬렉션 request 생성/수정, example 자동 생성, docs/request 검증 | `postman-request`, `postman-example`, `postman-docs-review` | 0.2.0 |
-| **figma-tools** | Figma 코멘트 조회·작성·삭제 | `figma-comment` | 0.2.0 |
+| **hud** | Claude 구독 사용량(rate limit) + 컨텍스트/모델/비용 + 네이티브 Task 진행률 상태줄 (clean-room, 의존성 0) | `setup` | 0.3.0 |
+| **release-tools** | git 태그 간 변경 분석으로 FE팀 공유용 릴리즈 노트를 작성하고 GitHub Release에 등록 (릴리즈 담당자용) | `release-note` | 0.3.0 |
+| **visualize** | 기술 개념을 공식 문서 근거 + 레포 실측으로 설명하고 인터랙티브 HTML로 시연 (`--text` 시 텍스트만) | `showme` | 0.3.0 |
+| **arch-tools** | 코드 분석 기반 아키텍처 문서화 (ADR·Mermaid 다이어그램/PDF) | `adr`, `diagram` | 0.3.0 |
+| **postman-tools** | Postman 컬렉션 request 생성/수정, example 자동 생성, docs/request 검증 | `postman-request`, `postman-example`, `postman-docs-review` | 0.3.0 |
+| **figma-tools** | Figma 코멘트 조회·작성·삭제 | `figma-comment` | 0.3.0 |
 
 > 위 표의 "주요 스킬"은 핵심 스킬만 표기했습니다. `visualize`·`arch-tools`를 제외한 모든 플러그인은 설정/활성화용 `setup` 스킬도 함께 제공합니다 — [Setup](#setup) 참고.
 
