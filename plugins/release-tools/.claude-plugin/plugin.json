@@ -1,6 +1,6 @@
 {
   "name": "release-tools",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "git 태그 간 변경 분석으로 릴리즈 노트를 작성해 GitHub Release에 등록하는 릴리즈 도구 모음",
   "author": {
     "name": "okep"

@@ -1,6 +1,6 @@
 {
   "name": "runtime-verify",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Jira 이슈·브랜치별 포트 블록으로 애플리케이션 모듈을 병렬 기동하고 브라우저로 검증 시나리오를 확인",
   "author": {
     "name": "okep"
