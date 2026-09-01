@@ -31,15 +31,14 @@ jira-tools 스킬들이 읽는 `.claude/plugins.json`의 `jira-tools` 섹션과 
 `AskUserQuestion`으로 받는다:
 - **`baseUrl`**: Jira 사이트(예: `https://your-domain.atlassian.net`).
 - **`email`**: 계정 이메일.
-- **`projectKey`**: 기본 프로젝트 키(예: `OKEP`).
-- 이미 셋업된 상태에서 **다른 프로젝트를 추가**하려는 요청이면(예: "ABC 프로젝트 추가"), 기존
-  섹션은 그대로 두고 2-1 조회를 그 프로젝트 키로 수행해 `projects.<키>` 서브섹션으로 병합한다
-  (issueTypes·components·customFields·assignee 만 — 인증·baseUrl 은 사이트 공통이라 중복 저장하지 않는다).
-- **`assignee`**: 기본 담당자(선택).
+- **프로젝트 키(1개 이상)**: 예 `OKEP`. 여러 개면 쉼표로 받는다 — 각 키가 `projects.<키>` 항목이 된다.
+- 이미 셋업된 상태에서 **프로젝트를 추가**하려는 요청이면(예: "ABC 프로젝트 추가"), 기존 `projects` 는
+  그대로 두고 2-1 조회를 새 키로만 수행해 `projects.<키>` 로 병합한다 (인증·baseUrl 은 사이트 공통이라 그대로).
+- **`assignee`**: 프로젝트별 기본 담당자(선택) — `projects.<키>.assignee` 에 넣는다.
 
 > `issueTypes`·`components`·`customFields`·Cloud ID는 **묻지 않는다** — 사람이 외우는 값이 아니므로 2-1절에서 API로 자동 조회한다.
 
-### 2-1. ID 자동 조회 (Jira REST API)
+### 2-1. ID 자동 조회 (Jira REST API) — 입력받은 **각 프로젝트 키마다** 수행
 `~/.jira-token`과 `email`로 Basic 인증 헤더를 만들어 아래를 호출하고, 결과로 섹션을 채운다.
 
 ```bash
@@ -74,21 +73,24 @@ curl -s -H "Authorization: Basic $AUTH" "<baseUrl>/rest/api/3/field"
 ```json
 {
   "jira-tools": {
-    "projectKey": "OKEP",
     "baseUrl": "https://your-domain.atlassian.net",
     "email": "you@example.com",
     "apiTokenFile": "~/.jira-token",
     "cloudId": "<자동조회>",
-    "assignee": "username",
-    "issueTypes": { "결함": "10004", "작업": "10002" },
-    "components": { "Backend": "10001" },
-    "customFields": { "issueCategory": { "fieldId": "customfield_10038", "value": { "id": "10022" } } },
-    "projects": { "ABC": { "issueTypes": { "작업": "10012" }, "components": { "Web": "10201" } } }
+    "projects": {
+      "OKEP": {
+        "assignee": "username",
+        "issueTypes": { "결함": "10004", "작업": "10002" },
+        "components": { "Backend": "10001" },
+        "customFields": { "issueCategory": { "fieldId": "customfield_10038", "value": { "id": "10022" } } }
+      }
+    }
   }
 }
 ```
 
-`projects` 는 같은 사이트의 **추가 프로젝트**를 쓸 때만 넣는다 — "프로젝트 추가" 요청 시 2-1 조회로 채운다.
+프로젝트별 값(assignee·issueTypes·components·customFields)은 **전부 `projects.<키>` 안에** 둔다.
+구 형식(최상위 `projectKey`·`issueTypes` 등)을 발견하면 이 구조로 재작성한다 — 구 형식은 더 이상 읽지 않는다.
 
 > ⚠️ 토큰은 **plugins.json에 넣지 않는다** — `apiTokenFile` 경로로만 둔다.
 
@@ -114,3 +116,6 @@ grep -qxF '.claude/plugins.json' "$root/.gitignore" 2>/dev/null || echo '.claude
 
 ### 7. 요약 보고
 plugins.json 경로·생성/병합, 토큰 파일 상태, 자동 조회된 ID 개수(issueTypes n·components m·customFields k), gitignore 등록, (했다면) 검증 결과를 요약. "이제 `jira 이슈 만들어줘`로 사용하세요" 안내.
+
+마지막에 멀티 프로젝트 안내 한 줄을 덧붙인다: "같은 사이트의 다른 프로젝트도 쓴다면
+`/jira-tools:setup` 에서 'ABC 프로젝트 추가해줘' 라고 요청하세요 — `projects.ABC` 섹션으로 병합됩니다."

@@ -57,7 +57,7 @@ root=$(cd "$gcd/.." && pwd -P)
 | 키 | 필수 | 설명 |
 |----|:--:|------|
 | `modules` | ✅ | 기동할 모듈 배열 `{name, dir, start, health}`. `start`·`health` 문자열의 `{sN}` 자리에 슬롯 N 포트가 치환된다 |
-| `projectKey` | | Jira 프로젝트 키. 없으면 `jira-tools.projectKey` 를 폴백으로 읽고, 그래도 없으면 질문 |
+| `projectKey` | | Jira 프로젝트 키. 없으면 `jira-tools.projects` 의 키가 1개일 때 그것을 폴백으로 쓰고, 그래도 없으면 질문 |
 | `credentialsFile` | | 로그인 계정 파일 경로 (`id:pw` 한 줄). UI 검증에 로그인이 필요할 때 사용 |
 | `portBase` | | 포트 산식 기준값 (기본 `10000`) |
 | `worktreeBase` | | worktree 생성 위치 (기본 `/tmp`) |

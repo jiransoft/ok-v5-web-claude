@@ -16,7 +16,7 @@
 #   jira-issue.sh env
 #
 # 설정은 본체 레포 루트의 .claude/plugins.json 의 jira-tools 섹션에서 읽는다
-# (baseUrl · email · apiTokenFile · projectKey).
+# (baseUrl · email · apiTokenFile · projects).
 # 성공 시 이슈 키(create) 또는 accountId(user)를 stdout 에 한 줄로 낸다.
 
 set -euo pipefail
@@ -101,12 +101,12 @@ env)
   printf 'baseUrl=%q\n'     "$baseUrl"
   printf 'email=%q\n'       "$email"
   printf 'tokenFile=%q\n'   "$tokenFile"
-  printf 'projectKey=%q\n'  "$(conf projectKey)"
+  printf 'projects=%q\n'    "$(jq -re '."jira-tools".projects // {} | keys | join(",")' "$CONF" 2>/dev/null || true)"
   printf 'pluginsJson=%q\n' "$CONF"
   ;;
 
 create)
-  summary=""; issuetype=""; descfile=""; project=$(conf projectKey); parent=""; component=""
+  summary=""; issuetype=""; descfile=""; project=""; parent=""; component=""
   fields_json='{}'; dryrun=0
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -127,7 +127,11 @@ create)
   done
   [ -n "$summary" ]   || die "--summary 가 필요하다"
   [ -n "$issuetype" ] || die "--type 이 필요하다"
-  [ -n "$project" ]   || die "--project 가 없고 plugins.json 에 projectKey 도 없다"
+  if [ -z "$project" ]; then
+    # projects 에 프로젝트가 하나뿐이면 그것을 쓴다 (질문 없는 단일 프로젝트 UX)
+    project=$(jq -re '."jira-tools".projects // {} | keys | if length == 1 then .[0] else empty end' "$CONF" 2>/dev/null || true)
+  fi
+  [ -n "$project" ]   || die "--project 가 필요하다 — plugins.json 의 projects: $(jq -re '."jira-tools".projects // {} | keys | join(", ")' "$CONF" 2>/dev/null)"
 
   desc=$(adf_from_file "$descfile")
   payload=$(jq -n \

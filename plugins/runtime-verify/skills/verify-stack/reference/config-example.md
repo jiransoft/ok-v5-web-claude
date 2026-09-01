@@ -33,7 +33,7 @@
 ```jsonc
 {
   "runtime-verify": {
-    "projectKey": "PROJ",                        // 생략 시 jira-tools.projectKey 폴백
+    "projectKey": "PROJ",                        // 생략 시 jira-tools.projects 의 유일한 키 폴백
     "credentialsFile": "~/.admin-credentials",   // "id:pw" 한 줄
     "portBase": 10000,
     "worktreeBase": "/tmp",

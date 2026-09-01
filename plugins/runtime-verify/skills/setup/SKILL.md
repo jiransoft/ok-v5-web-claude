@@ -40,7 +40,7 @@ ls apps 2>/dev/null; ls */build.gradle* */package.json 2>/dev/null
 
 ### 3. 나머지 키 인터뷰
 
-- `projectKey`: `jira-tools.projectKey`가 있으면 그 값을 기본 제안
+- `projectKey`: `jira-tools.projects` 의 키가 1개면 그 값을 기본 제안
 - `credentialsFile`: UI 로그인 계정 파일(`id:pw` 한 줄). 민감 값 자체를 plugins.json에 넣지 않는다
 - `portBase`(기본 10000)·`worktreeBase`(기본 /tmp)는 기본값 사용 여부만 확인
 - `ui`: 브라우저 검증 진입 모듈·슬롯·로그인 경로

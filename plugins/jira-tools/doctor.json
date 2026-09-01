@@ -5,18 +5,13 @@
   "config": {
     "key": "jira-tools",
     "required": [
-      "projectKey",
       "baseUrl",
       "email",
-      "apiTokenFile"
+      "apiTokenFile",
+      "projects"
     ],
     "optional": [
-      "cloudId",
-      "assignee",
-      "issueTypes",
-      "components",
-      "customFields",
-      "projects"
+      "cloudId"
     ]
   },
   "files": [

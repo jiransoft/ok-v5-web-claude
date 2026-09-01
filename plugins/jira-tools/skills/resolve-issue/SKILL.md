@@ -31,7 +31,7 @@ Jira 이슈를 조회하고, 코드베이스를 분석하여 원인/수정방향
 시스템 컨텍스트에 이미 로드된 값을 사용하지 말고, 반드시 Read 도구로 파일을 직접 읽어서 설정을 가져온다.
 
 - **baseUrl** — Atlassian URL (예: `https://xxx.atlassian.net`)
-- **projectKey** — 기본 프로젝트 키. **인자로 받은 이슈 키의 프로젝트가 이와 달라도(같은 사이트) 그대로 진행한다** — 인증은 사이트 단위다
+- (프로젝트 키 설정은 필요 없다 — 인자로 받은 이슈 키/URL 이 프로젝트를 결정하고, 인증은 사이트 단위다)
 - **email** — Atlassian 계정 이메일
 - **apiTokenFile** — API 토큰 파일 경로 (예: `~/.jira-token`)
 
@@ -46,7 +46,7 @@ eval "$("${CLAUDE_SKILL_DIR}/../../scripts/jira-issue.sh" env)"
 token=$(tr -d '\n\r' < "$tokenFile")
 ```
 
-`env` 는 `baseUrl`·`email`·`tokenFile`·`projectKey`·`pluginsJson` 을 셸 대입문으로 낸다
+`env` 는 `baseUrl`·`email`·`tokenFile`·`projects`·`pluginsJson` 을 셸 대입문으로 낸다
 (토큰 값은 내지 않는다 — stdout 은 트랜스크립트에 남는다).
 
 ⚠️ **`.claude/plugins.json` 을 상대경로로 직접 읽지 않는다.** `--source` 로 worktree 를 만들면
@@ -315,6 +315,6 @@ git worktree remove /tmp/wt-{이슈키}
 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
 **권고 대상:**
-- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `projectKey`, `baseUrl`, `email`, `apiTokenFile`
+- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `baseUrl`, `email`, `apiTokenFile`
 - **제외**: CLI 인자로 받은 값(이슈 키/URL), AI 가 자동 판단한 값 (원인 분석 결과, 댓글 본문)
 

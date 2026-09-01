@@ -32,42 +32,45 @@ argument-hint: "[이슈 설명 또는 컨텍스트]"
 
 **필수:**
 - **baseUrl** — Atlassian URL (예: `https://xxx.atlassian.net`)
-- **projectKey** — 이슈를 생성할 프로젝트 키
 - **email** — Atlassian 계정 이메일 (Basic Auth 용)
 - **apiTokenFile** — API 토큰이 저장된 파일 경로 (예: `~/.jira-token`)
+- **projects** — 프로젝트 키 → 프로젝트별 설정 맵 (1개 이상)
 
 > **설정 안내:** Atlassian API 토큰은 https://id.atlassian.com/manage-profile/security/api-tokens 에서 발급받아 `~/.jira-token` 파일로 저장한다.
 
-**선택 (`.claude/plugins.json`에 있으면 사용, 없으면 생략 또는 사용자에게 질문):**
-- **customFields.issueCategory** — 커스텀 필드 ID와 값 (예: `{"fieldId": "customfield_10038", "value": {"id": "10022"}}`)
-- **components** — 사용 가능한 컴포넌트와 ID 목록
-- **issueTypes** — 이슈 유형과 ID 매핑
-- **projects** — 같은 사이트의 **추가 프로젝트별** 매핑 오버라이드 (아래 참고)
-
-## 대상 프로젝트 결정 (멀티 프로젝트)
-
-대상 프로젝트는 `--project` 인자 > 대화 컨텍스트의 지시 > 설정의 `projectKey`(기본) 순으로 정한다.
-
-대상이 `projectKey`와 **다른 프로젝트**면, 이슈유형·컴포넌트·커스텀필드·assignee 매핑은
-`projects.<프로젝트키>` 서브섹션에서 찾는다:
+**선택:**
+- **cloudId** — Jira Cloud 인스턴스 ID
+- `projects.<키>` 안 — **issueTypes**(유형→ID) · **components**(이름→ID) · **customFields**(예: issueCategory) · **assignee**: 있으면 사용, 없으면 생략 또는 질문
 
 ```jsonc
 "jira-tools": {
-  "projectKey": "OKEP",                  // 기본 프로젝트 — 최상위 매핑은 이 프로젝트 것
-  "...": "...",
-  "projects": {                          // (선택) 추가 프로젝트별 매핑
-    "ABC": { "issueTypes": { "...": "..." }, "components": { "...": "..." }, "customFields": {}, "assignee": "..." }
+  "baseUrl": "...", "email": "...", "apiTokenFile": "~/.jira-token", "cloudId": "...",
+  "projects": {
+    "OKEP": { "assignee": "...", "issueTypes": { "...": "..." }, "components": { "...": "..." }, "customFields": {} },
+    "ABC":  { "issueTypes": { "...": "..." } }
   }
 }
 ```
 
-- `projects.<키>` 가 없으면 **기본 프로젝트(OKEP)의 매핑을 재사용하지 않는다** — 프로젝트마다
-  컴포넌트·이슈유형 구성이 달라 잘못된 값이 들어간다. 대신 createmeta 로 그 프로젝트 것을 조회한다:
-  ```bash
-  curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/createmeta?projectKeys=<대상키>&expand=projects.issuetypes.fields"
-  ```
-- 조회한 값으로 진행한 뒤, 작업 완료 후 `projects.<대상키>` 병합을 설정 권고 블록으로 안내한다
-- 인증(baseUrl·email·apiTokenFile)은 사이트 공통이라 그대로 쓴다
+## 대상 프로젝트 결정
+
+대상 프로젝트는 다음 순서로 정한다:
+
+1. `--project` 인자
+2. 대화 컨텍스트의 지시 (예: "ABC 프로젝트에 만들어줘", 이슈 URL/키의 prefix)
+3. `projects` 에 프로젝트가 **1개뿐이면 그것** — 질문하지 않는다
+4. 복수면 AskUserQuestion 으로 선택받는다
+
+이슈유형·컴포넌트·커스텀필드·assignee 매핑은 **`projects.<대상키>` 에서 읽는다.** 다른 프로젝트의
+매핑을 재사용하지 않는다 — 프로젝트마다 구성이 다르다. 대상이 `projects` 에 **등록되지 않은**
+프로젝트면 createmeta 로 조회해 진행한다:
+
+```bash
+curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/createmeta?projectKeys=<대상키>&expand=projects.issuetypes.fields"
+```
+
+조회로 진행했다면 작업 완료 후 `projects.<대상키>` 병합을 설정 권고 블록으로 안내한다.
+인증(baseUrl·email·apiTokenFile)은 사이트 공통이라 프로젝트와 무관하게 그대로 쓴다.
 
 ## 이슈 생성 규칙
 
@@ -78,23 +81,23 @@ argument-hint: "[이슈 설명 또는 컨텍스트]"
 | **보고자** | 컨텍스트에서 보고자 정보가 있으면 REST API(`/rest/api/3/user/search`)로 검색 후 설정. 생성 후 REST API(`PUT /rest/api/3/issue/{key}`)로 reporter 변경을 시도한다. 실패 시 설명(description)에 "보고자: {이름}"으로 기록 |
 | **담당자** | 컨텍스트에서 담당자 정보가 있으면 설정. 없으면 할당하지 않는다 (null) |
 | **이슈 유형** | 기본 `결함`. 내용에 따라 사용자에게 선택지를 제공한다 |
-| **이슈 구분** | `.claude/plugins.json`에 이슈 구분 필드 설정이 있으면 적용. 없으면 생략 |
-| **컴포넌트** | `.claude/plugins.json`에 컴포넌트 목록이 있으면 내용을 분석하여 결정. 없으면 생략 |
+| **이슈 구분** | 대상 프로젝트 설정(`projects.<키>.customFields`)에 있으면 적용. 없으면 생략 |
+| **컴포넌트** | 대상 프로젝트 설정(`projects.<키>.components`)에 있으면 내용을 분석하여 결정. 없으면 생략 |
 | **요약** | 핵심을 한글 70자 이내로 요약 |
 | **설명** | 아래 설명 템플릿에 따라 작성 |
 
 ### 이슈 유형
 
-`.claude/plugins.json`에 이슈 유형 목록이 있으면 해당 목록을 사용한다.
+대상 프로젝트 설정(`projects.<키>.issueTypes`)에 유형 목록이 있으면 그것을 사용한다.
 없으면 Jira 프로젝트의 기본 이슈 유형을 사용하며, `결함`을 기본값으로 한다.
 
 ### 컴포넌트 판별 규칙
 
-`.claude/plugins.json`에 컴포넌트 목록이 있으면 내용의 키워드를 분석하여 컴포넌트를 결정한다.
+대상 프로젝트 설정(`projects.<키>.components`)에 목록이 있으면 내용의 키워드를 분석하여 컴포넌트를 결정한다.
 
 - 판별이 애매하면 AskUserQuestion으로 사용자에게 질문한다
 - 복수 컴포넌트 해당 시 모두 포함할 수 있다
-- `.claude/plugins.json`에 컴포넌트 설정이 없으면 컴포넌트를 지정하지 않는다
+- 대상 프로젝트 설정에 컴포넌트가 없으면 컴포넌트를 지정하지 않는다
 
 ### 설명 템플릿
 
@@ -162,7 +165,7 @@ ${CLAUDE_SKILL_DIR}/../../scripts/jira-issue.sh create \
 
 | 옵션 | 용도 |
 |------|------|
-| `--project <키>` | `plugins.json` 의 `projectKey` 대신 다른 프로젝트에 만들 때 |
+| `--project <키>` | 대상 프로젝트 명시 (미지정 시 `projects` 가 1개면 자동, 복수면 질문) |
 | `--parent <이슈키>` | Epic 하위로 생성. 이때 `--type` 은 `하위 작업` 으로 준다 |
 | `--component <이름>` | 컴포넌트 지정 |
 | `--field <필드ID>=<값>` | 이슈 구분 등 커스텀 필드. 여러 번 반복 가능 |
@@ -204,6 +207,6 @@ Jira 이슈 생성 완료!
 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
 **권고 대상:**
-- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `projectKey`, `baseUrl`, `email`, `apiTokenFile`, `assignee`, `issueTypes`, `components`, `customFields`
+- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `baseUrl`, `email`, `apiTokenFile`, `projects.<키>`(assignee·issueTypes·components·customFields)
 - **제외**: 컨텍스트에서 추출한 값 (담당자 등), AI 가 자동 판단한 값 (이슈 유형 분류, 컴포넌트 매핑 결과, 이슈 본문/요약)
 

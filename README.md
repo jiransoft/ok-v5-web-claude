@@ -217,7 +217,7 @@ echo '.claude/plugins.json' >> .gitignore
 
 | 플러그인 | 필수 키 | 선택 키 |
 |----------|---------|---------|
-| **jira-tools** | `projectKey`, `baseUrl`, `email`, `apiTokenFile` | `cloudId`, `assignee`, `issueTypes`, `components`, `customFields`, `projects`(멀티 프로젝트) |
+| **jira-tools** | `baseUrl`, `email`, `apiTokenFile`, `projects` | `cloudId` — 프로젝트별 값(assignee·issueTypes·components·customFields)은 `projects.<키>` 안에 |
 | **git-workflow** | — | `defaultAssignee`, `defaultReviewer`, `defaultLabels`, `moduleRoot`, `project`, `commit` |
 | **release-tools** | — | `project`, `swaggerBaseUrl`, `modules` |
 | **postman-tools** | `workspaceId`, `workspaceName`, `apiKey` | `backendStack`, `services`, `collectionUid` |
@@ -231,19 +231,19 @@ echo '.claude/plugins.json' >> .gitignore
 // .claude/plugins.json
 {
   "jira-tools": {
-    "projectKey": "PROJ",
     "baseUrl": "https://your-domain.atlassian.net",
     "email": "you@example.com",
     "apiTokenFile": "~/.jira-token",
     "cloudId": "xxxxxxxx-xxxx-...",              // setup이 자동 조회 (선택)
-    "assignee": "username",
-    "issueTypes": { "결함": "10004", "작업": "10002" },
-    "components": { "Backend": "10001", "Frontend": "10002" },
-    "customFields": {
-      "issueCategory": { "fieldId": "customfield_10038", "value": { "id": "10022" } }
-    },
-    "projects": {                                  // (선택) 같은 사이트의 추가 프로젝트별 매핑
-      "ABC": { "issueTypes": { "작업": "10012" }, "components": { "Web": "10201" } }
+    "projects": {                                // 프로젝트별 설정 — 쓰는 프로젝트마다 한 항목
+      "PROJ": {
+        "assignee": "username",
+        "issueTypes": { "결함": "10004", "작업": "10002" },
+        "components": { "Backend": "10001", "Frontend": "10002" },
+        "customFields": {
+          "issueCategory": { "fieldId": "customfield_10038", "value": { "id": "10022" } }
+        }
+      }
     }
   },
   "git-workflow": {
@@ -280,7 +280,7 @@ echo '.claude/plugins.json' >> .gitignore
     "techStack": ["Java", "Spring Boot", "Kotlin"]
   },
   "runtime-verify": {
-    "projectKey": "PROJ",                            // 생략 시 jira-tools.projectKey 폴백
+    "projectKey": "PROJ",                            // 생략 시 jira-tools.projects 의 유일한 키 폴백
     "credentialsFile": "~/.admin-credentials",       // "id:pw" 한 줄
     "portBase": 10000,
     "worktreeBase": "/tmp",
