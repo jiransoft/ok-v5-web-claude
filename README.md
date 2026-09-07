@@ -152,19 +152,26 @@ claude plugin marketplace update
 
 셋업은 손으로 쓰는 [Configuration](#configuration)을 대신해, `.claude/plugins.json` 섹션 생성/병합·토큰 파일 안내·`.gitignore` 등록까지 처리하고, **사람이 모르는 ID성 값은 API·git에서 자동 조회**합니다.
 
+**팀 필수 5종** — [Install §5](#5-셋업--설치한-플러그인마다-1회)에서 실행하는 4개 + 셋업 없는 doctor:
+
+| 플러그인 | 셋업 명령 | 셋업이 해주는 일 (자동 조회 포함) |
+|----------|-----------|-----------------------------------|
+| **git-workflow** | `/git-workflow:setup` | `git remote`→`project`, 레포 구조→`moduleRoot` 유추 |
+| **jira-tools** | `/jira-tools:setup` | baseUrl·토큰으로 **issueType/component/customField ID·Cloud ID 자동 조회** |
+| **code-review-suite** | `/code-review-suite:setup` | 레포 매니페스트 스캔으로 **techStack 자동 감지** |
+| **runtime-verify** | `/runtime-verify:setup` | 레포 스캔으로 **모듈 후보 제안** + 포트 슬롯 설계·`prepare` 구성 |
+| **doctor** | — | 설정 불필요 (`/doctor:check` 로 나머지 플러그인을 진단) |
+
+**개인 선택 6종** — 설치한 사람만, 자기 것만:
+
 | 플러그인 | 셋업 명령 | 셋업이 해주는 일 (자동 조회 포함) |
 |----------|-----------|-----------------------------------|
 | **hud** | `/hud:setup` | statusLine 배선 — [아래 참고](#hud-statusline-활성화) |
-| **jira-tools** | `/jira-tools:setup` | baseUrl·토큰으로 **issueType/component/customField ID·Cloud ID 자동 조회** |
-| **postman-tools** | `/postman-tools:setup` | apiKey로 **워크스페이스·컬렉션 목록 조회 → 선택**해 ID 채움 |
-| **git-workflow** | `/git-workflow:setup` | `git remote`→`project`, 레포 구조→`moduleRoot` 유추 |
 | **release-tools** | `/release-tools:setup` | `git remote`→`project`, 레포 구조→`modules` 유추, 기존 `git-workflow` 섹션 값 이전 |
+| **postman-tools** | `/postman-tools:setup` | apiKey로 **워크스페이스·컬렉션 목록 조회 → 별칭 지정**해 `collections` 구성 |
 | **figma-tools** | `/figma-tools:setup` | `~/.figma-token` 안내 + `GET /v1/me` 유효성 검증 |
-| **code-review-suite** | `/code-review-suite:setup` | 레포 매니페스트 스캔으로 **techStack 자동 감지** |
-| **runtime-verify** | `/runtime-verify:setup` | 레포 스캔으로 **모듈 후보 제안** + 포트 슬롯 설계·`prepare` 구성 |
 | **visualize** | — | 설정 불필요 |
 | **arch-tools** | — | 설정 불필요 |
-| **doctor** | — | 설정 불필요 (`/doctor:check` 로 나머지 플러그인을 진단) |
 
 ### hud statusline 활성화
 
