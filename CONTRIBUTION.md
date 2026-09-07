@@ -267,7 +267,8 @@ model: opus | sonnet | haiku       # 깊은 분석 opus, 표준 sonnet, 단순 �
 ### MCP 비의존
 
 모든 외부 연동(Jira/GitHub/Slack/Figma/Postman)은 CLI 또는 REST(curl)로 한다. MCP 서버를
-전제하지 않는다. 신규 연동도 이 원칙을 따른다.
+전제하지 않는다. 신규 연동도 이 원칙을 따른다. 현재 유일한 예외는 `runtime-verify` 의
+`verify-stack`(playwright MCP) — 기능 자체가 브라우저 검증이라 대체 불가한 경우만 허용한다.
 
 ## 새 스킬/플러그인 추가 체크리스트
 

@@ -38,7 +38,7 @@
 ```json
 "config": {
   "key": "jira-tools",
-  "required": ["projectKey", "baseUrl"],
+  "required": ["baseUrl", "projects"],
   "optional": ["cloudId", "assignee"]
 }
 ```
