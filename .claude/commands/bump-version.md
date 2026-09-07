@@ -23,8 +23,9 @@ grep -rn --include='*.json' --include='*.md' -F "$cur" . | grep -v '^\./\.git/'
 | `.claude-plugin/marketplace.json` | marketplace 인덱스 (`metadata.version` 1곳 + 각 `plugins[].version`) |
 | `plugins/*/.claude-plugin/plugin.json` | 각 플러그인 정의 |
 | `README.md` 테이블 | 사용자 문서 (Version 컬럼, 플러그인당 1곳) |
+| `docs/marketplace-architecture.md` | 상단 `> 기준: vX.Y.Z (YYYY-MM-DD)` 1곳 — 버전과 함께 **날짜도 오늘로** 갱신 |
 
-> 저장소 루트에는 `plugin.json` 이 없다. 버전은 위 세 갈래에만 있다.
+> 저장소 루트에는 `plugin.json` 이 없다. 버전은 위 네 갈래에만 있다.
 
 ## 절차
 
@@ -36,7 +37,7 @@ grep -rn --include='*.json' --include='*.md' -F "$cur" . | grep -v '^\./\.git/'
    - 위 grep 으로 **총 출현 횟수를 먼저 센다** (치환 후 대조용)
 3. 위에서 찾은 모든 위치의 버전을 현재 버전 → 새 버전으로 일괄 변경한다.
    개수를 가정하지 말고 2번에서 센 만큼 바뀌었는지 확인한다.
-4. README.md 내용을 실제 스킬/설정과 동기화한다:
+4. README.md 내용을 실제 스킬/설정과 동기화한다 (docs 의 기준 버전 줄은 3에서 이미 갱신됨):
    - 각 플러그인의 SKILL.md에서 `plugins.json` 관련 설정 키를 추출한다
    - README.md의 **설정 파일 예시** (`plugins.json` jsonc 블록)와 **플러그인별 필요 설정 테이블**이 실제 SKILL.md와 일치하는지 대조한다
    - 새로 추가되거나 삭제된 설정 키가 있으면 README.md를 업데이트한다

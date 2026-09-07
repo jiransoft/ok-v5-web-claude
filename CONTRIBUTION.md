@@ -272,19 +272,21 @@ model: opus | sonnet | haiku       # 깊은 분석 opus, 표준 sonnet, 단순 �
 
 ## 새 스킬/플러그인 추가 체크리스트
 
-스킬 추가 시 **세 곳을 동시에 갱신**한다 (드리프트 방지):
+스킬 추가 시 **아래를 동시에 갱신**한다 (드리프트 방지):
 
 - [ ] `plugins/<plugin>/skills/<skill>/SKILL.md` 작성 (위 frontmatter 규칙)
 - [ ] `README.md` 의 플러그인 표 Skills 컬럼에 추가
 - [ ] `.claude-plugin/marketplace.json` 의 해당 플러그인 description/tags 갱신
 - [ ] 새 설정 키가 생기면 README 의 "플러그인별 필요 설정" 표 + 설정 예시 갱신
 - [ ] 새 외부 도구 의존이 생기면 README 의 Requirements 표 갱신
+- [ ] 구조가 바뀌면(스킬 추가·제거, 외부 연동·MCP 변경) `docs/marketplace-architecture.md` 다이어그램·표 갱신
 
 신규 **플러그인** 추가 시:
 
 - [ ] `plugins/<plugin>/.claude-plugin/plugin.json` 생성 (name/version/description/author/keywords)
 - [ ] `marketplace.json` 의 `plugins[]` 에 항목 추가 (source/version/category/tags)
 - [ ] README 표 + Install 섹션에 추가
+- [ ] `docs/marketplace-architecture.md` 다이어그램·파일 위치 표에 추가
 
 ## 버전 관리
 
