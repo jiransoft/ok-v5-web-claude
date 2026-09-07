@@ -111,7 +111,8 @@ claude plugin install figma-tools@okep-butler -s local
 
 ### 5. 셋업 — 설치한 플러그인마다 1회
 
-Claude Code를 열고, 설치한 플러그인마다 셋업을 한 번씩 실행합니다. 필수 5종 기준:
+Claude Code를 열고, 설치한 플러그인마다 셋업을 한 번씩 실행합니다. 필수 5종 중 `doctor` 는
+설정 자체가 없어 셋업이 없으므로, 실행할 것은 아래 **4개**입니다:
 
 ```
 /git-workflow:setup
@@ -120,7 +121,7 @@ Claude Code를 열고, 설치한 플러그인마다 셋업을 한 번씩 실행�
 /runtime-verify:setup
 ```
 
-`doctor` 는 설정이 없어 셋업이 필요 없고, 개인 선택 플러그인은 [Setup](#setup) 표에서 자기 것만 찾아 돌리면 됩니다.
+개인 선택 플러그인은 [Setup](#setup) 표에서 자기 것만 찾아 돌리면 됩니다.
 
 > 셋업 없이도 동작은 합니다 — 대신 스킬이 실행 중에 필요한 값을 매번 물어봅니다. 셋업은 그 질문을
 > 미리 한 번에 끝내두고, Jira Cloud ID처럼 사람이 모르는 값을 API에서 자동 조회해주는 편의 기능입니다.
