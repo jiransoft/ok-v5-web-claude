@@ -1,6 +1,6 @@
 {
   "name": "code-review-suite",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "4인 병렬 코드 리뷰 (Design/Logic/Performance/Test) 에이전트 + 통합 리뷰 스킬",
   "author": {
     "name": "okep"
