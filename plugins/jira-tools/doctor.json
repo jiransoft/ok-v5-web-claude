@@ -42,6 +42,20 @@
       "required": false,
       "install": "brew install pandoc",
       "note": "미설치 시 댓글이 {code} 블록으로 폴백"
+    },
+    {
+      "name": "lsof",
+      "required": false,
+      "usedBy": "complete-issue",
+      "note": "런타임 기동 전 포트 선점 검사"
+    }
+  ],
+  "mcp": [
+    {
+      "server": "playwright",
+      "required": false,
+      "usedBy": "complete-issue 브라우저 검증",
+      "note": "없으면 화면 증거를 수집할 수 없어 증거 사다리 아래로 내려간다"
     }
   ]
 }
