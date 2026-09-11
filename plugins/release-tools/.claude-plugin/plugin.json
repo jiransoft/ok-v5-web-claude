@@ -1,6 +1,6 @@
 {
   "name": "release-tools",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "git 태그 간 변경 분석으로 FE팀 공유용 릴리즈 노트를 작성하고 GitHub Release에 등록",
   "author": {
     "name": "okep"
