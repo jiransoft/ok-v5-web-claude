@@ -13,7 +13,7 @@ Claude Code 플러그인 마켓플레이스 — GitHub·Jira·Figma·Postman 연
 | Plugin | 설명 | 주요 스킬 | Version |
 |--------|------|-----------|---------|
 | **git-workflow** | GitHub PR 생성·커밋·개발 리포트 등 워크플로우 자동화 | [`create-pr`](plugins/git-workflow/skills/create-pr/SKILL.md), [`dev-report`](plugins/git-workflow/skills/dev-report/SKILL.md), [`commit`](plugins/git-workflow/skills/commit/SKILL.md) | 1.1.0 |
-| **jira-tools** | Jira 이슈 자동 생성·분석·구현 | [`create-jira-issue`](plugins/jira-tools/skills/create-jira-issue/SKILL.md), [`resolve-issue`](plugins/jira-tools/skills/resolve-issue/SKILL.md), [`impl-issue`](plugins/jira-tools/skills/impl-issue/SKILL.md) | 1.1.0 |
+| **jira-tools** | Jira 이슈 자동 생성·분석·구현·실동작 검증 보고 | [`create-jira-issue`](plugins/jira-tools/skills/create-jira-issue/SKILL.md), [`resolve-issue`](plugins/jira-tools/skills/resolve-issue/SKILL.md), [`impl-issue`](plugins/jira-tools/skills/impl-issue/SKILL.md), [`complete-issue`](plugins/jira-tools/skills/complete-issue/SKILL.md) | 1.1.0 |
 | **code-review-suite** | 4인 병렬 코드 리뷰 (Design/Logic/Performance/Test) 에이전트 + 통합 리뷰 스킬 | [`code-review`](plugins/code-review-suite/skills/code-review/SKILL.md) | 1.1.0 |
 | **runtime-verify** | Jira 이슈·브랜치별 포트 블록으로 애플리케이션 모듈을 병렬 기동하고 브라우저로 검증 시나리오를 확인 (detached worktree, context 격리) | [`verify-stack`](plugins/runtime-verify/skills/verify-stack/SKILL.md) | 1.1.0 |
 | **doctor** | 설치된 플러그인의 설정·토큰·CLI·MCP·훅 배선을 진단하고 조치를 안내 (플러그인별 `doctor.json` 기반) | [`check`](plugins/doctor/skills/check/SKILL.md) | 1.1.0 |

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Jira 이슈 생성·수정·사용자 검색.
+# Jira 이슈 생성·수정·첨부 업로드·사용자 검색.
 #
 # 값은 전부 인자나 파일로 받는다. 셸 변수를 JSON 이나 다른 언어 소스에 문자열로
 # 보간하지 않는다 — 요약·설명에 흔히 들어오는 ' " $ \ ''' 가 페이로드를 깨뜨리거나
@@ -12,12 +12,13 @@
 #                        [--field <필드ID>=<값>]...
 #   jira-issue.sh edit   --key <이슈키> [--assignee <accountId>] [--reporter <accountId>]
 #   jira-issue.sh label  --key <이슈키> --add <라벨>
+#   jira-issue.sh attach --key <이슈키> --file <경로> [--file <경로>]...
 #   jira-issue.sh user   --query <이름 또는 이메일>
 #   jira-issue.sh env
 #
 # 설정은 본체 레포 루트의 .claude/plugins.json 의 jira-tools 섹션에서 읽는다
 # (baseUrl · email · apiTokenFile · projects).
-# 성공 시 이슈 키(create) 또는 accountId(user)를 stdout 에 한 줄로 낸다.
+# 성공 시 이슈 키(create) · accountId(user) · 첨부 파일명(attach) 을 stdout 에 낸다.
 
 set -euo pipefail
 
@@ -89,7 +90,7 @@ adf_from_file() { # adf_from_file <경로|-->
   ' < "$src"
 }
 
-cmd=${1-}; [ -n "$cmd" ] || die "하위 명령이 필요하다 (create|edit|label|user|env)"
+cmd=${1-}; [ -n "$cmd" ] || die "하위 명령이 필요하다 (create|edit|label|attach|user|env)"
 shift
 
 case "$cmd" in
@@ -193,6 +194,38 @@ label)
   printf '라벨 추가 완료: %s += %s\n' "$key" "$add" >&2
   ;;
 
+attach)
+  key=""; files=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --key)  key=${2-}; shift 2 ;;
+      --file) files+=("${2-}"); shift 2 ;;
+      *) die "알 수 없는 옵션: $1" ;;
+    esac
+  done
+  [ -n "$key" ] || die "--key 가 필요하다"
+  [ ${#files[@]} -gt 0 ] || die "--file 이 하나 이상 필요하다"
+
+  # 첨부는 multipart 라 api() 를 쓰지 않는다 — api() 는 Content-Type: application/json 을
+  # 걸어두는데, 그러면 multipart 경계가 무시돼 Jira 가 415 를 낸다.
+  # X-Atlassian-Token: no-check 는 XSRF 가드를 넘기기 위한 필수 헤더다.
+  form=()
+  for f in "${files[@]}"; do
+    [ -f "$f" ] || die "첨부 파일이 없다: $f"
+    # curl 의 @ 문법은 이름의 , ; 를 옵션 구분자로 본다. 큰따옴표로 감싸 그대로 넘긴다.
+    form+=(-F "file=@\"$f\"")
+  done
+  out=$(curl -sS -w '\n%{http_code}' -u "$email:$token" \
+          -H "X-Atlassian-Token: no-check" \
+          -X POST "$baseUrl/rest/api/3/issue/$key/attachments" "${form[@]}")
+  code=${out##*$'\n'}; body=${out%$'\n'*}
+  case "$code" in
+    2*) printf '%s' "$body" | jq -re '.[].filename' ;;
+    *)  die "첨부 업로드 실패: $key → HTTP $code
+$(printf '%s' "$body" | jq -r '(.errorMessages // [])[]' 2>/dev/null || printf '%s' "$body")" ;;
+  esac
+  ;;
+
 user)
   query=""
   while [ $# -gt 0 ]; do
@@ -209,5 +242,5 @@ user)
     || die "일치하는 사용자를 찾지 못했다: $query"
   ;;
 
-*) die "알 수 없는 하위 명령: $cmd (create|edit|label|user|env)" ;;
+*) die "알 수 없는 하위 명령: $cmd (create|edit|label|attach|user|env)" ;;
 esac
