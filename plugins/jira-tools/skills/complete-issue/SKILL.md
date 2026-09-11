@@ -53,7 +53,7 @@ argument-hint: "<이슈키> [--source <branch>]"
 
 이 스킬은 두 섹션을 모두 읽는다:
 
-- **`jira-tools`** — `baseUrl`, `email`, `apiTokenFile` (이슈 조회·댓글·첨부)
+- **`jira-tools`** — `baseUrl`, `email`, `apiTokenFile` (이슈 조회·댓글·첨부). 선택 키 `transitions` 는 상태 전환 이름을 고정한다 (11단계)
 - **`runtime-verify`** — `modules`, `ui`, `credentialsFile`, `portBase`, `worktreeBase`, `prepare` (런타임 기동)
 
 설정 우선순위는 plugins.json → 프로젝트 `CLAUDE.md` → AskUserQuestion 순이다. 시스템 컨텍스트에 이미 로드된 값을 쓰지 말고 Read 도구로 파일을 직접 읽는다.
@@ -242,26 +242,61 @@ curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/2/issue/{이슈키}/commen
 
 ### 11. 상태 전환
 
-**검증 결과로 분기한다.** 가능한 전환 목록을 먼저 조회한다.
+**전환 이름을 문자열로 가정하지 않는다.** 워크플로우마다 이름이 다르고(`해결됨` · `해결함` · `완료` · `Done`) 나중에 바뀔 수도 있다. 이름으로 찾아 못 찾으면 조용히 전환을 건너뛰게 되므로, 언어·워크플로우와 무관한 **상태 카테고리**로 고른다.
+
+Jira 의 모든 상태는 세 카테고리 중 하나에 속하고, 이 값은 고정이다:
+
+| `statusCategory.key` | 뜻 | 이름 예시 |
+|----------------------|-----|----------|
+| `new` | 시작 전 | 열림 · 다시 열림 · To Do |
+| `indeterminate` | 진행 중 | 진행 중 · 확인중 · In Progress |
+| `done` | 완료 | 해결됨 · 해결함 · 완료 · Done |
+
+전환 목록 조회 응답에 각 전환의 **도착 상태 카테고리**가 함께 들어온다.
 
 ```bash
-curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/{이슈키}/transitions"
+curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/{이슈키}/transitions" \
+  | jq -r '.transitions[] | "\(.id)\t\(.name)\t\(.to.name)\t\(.to.statusCategory.key)"'
 ```
 
-| 검증 결과 | 전환 대상 | 근거 |
-|-----------|----------|------|
-| 전 항목 통과 | `해결됨` | 실동작까지 확인됐다 |
-| 실패 항목 있음 | `진행 중` | 되돌려서 재작업 대상임을 드러낸다 |
+**목표 카테고리** — 검증 결과로 정한다.
+
+| 검증 결과 | 목표 카테고리 | 근거 |
+|-----------|--------------|------|
+| 전 항목 통과 | `done` | 실동작까지 확인됐다 |
+| 실패 항목 있음 | `indeterminate` | 되돌려서 재작업 대상임을 드러낸다 |
 | 기동 불가로 검증 못 함 | 전환하지 않음 | 판단 근거가 없다 |
 
-응답에서 대상 이름의 `id` 를 찾아 전환한다.
+**전환 선택 사다리** — 위에서부터 내려가며 하나로 좁혀지면 멈춘다.
+
+1. **설정에 지정된 이름** — `jira-tools.transitions` 에 이름이 있고 그 이름이 조회 결과에 실제로 있으면 그것을 쓴다. 가장 결정론적이다
+
+   ```json
+   "transitions": { "done": "해결함", "inProgress": "진행 중" }
+   ```
+
+2. **목표 카테고리로 후보를 좁힌다** — 위 조회 결과에서 `to.statusCategory.key` 가 목표와 같은 전환만 남긴다. 후보가 1개면 그것을 쓴다
+3. **후보가 2개 이상이면 관용 이름으로 한 번 더 좁힌다** — `done` 은 해결·완료·Done·Resolved 를, `indeterminate` 는 진행·In Progress 를 이름에 포함한 것을 우선한다. 여기서 1개로 좁혀지면 그것을 쓴다
+4. **그래도 2개 이상이면 사용자에게 묻는다** — 후보 목록(전환 이름 → 도착 상태)을 보여주고 AskUserQuestion 으로 고르게 한다. 임의로 하나를 집지 않는다
+5. **후보가 0개면 전환하지 않는다** — 현재 상태에서 목표 카테고리로 가는 길이 없다는 뜻이다. 경고를 출력하고 13단계 결과에 사유를 적는다
+
+고른 전환의 `id` 로 실행한다.
 
 ```bash
 curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/3/issue/{이슈키}/transitions" \
   -H "Content-Type: application/json" -d '{"transition": {"id": "{전환 id}"}}'
 ```
 
-대상 전환이 목록에 없으면 (워크플로우가 다르거나 현재 상태에서 불가) 경고를 출력하고 다음 단계로 진행한다. 이름이 다른 유사 전환을 임의로 고르지 않는다.
+전환 후에는 **실제로 바뀐 상태를 다시 읽어 확인한다.** 전환 API 는 화면 필수 필드가 비면 204 를 주고도 상태를 바꾸지 않는 경우가 있다.
+
+```bash
+curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/{이슈키}?fields=status" \
+  | jq -r '.fields.status | "\(.name) [\(.statusCategory.key)]"'
+```
+
+읽어온 카테고리가 목표와 다르면 전환 실패로 보고한다. 성공으로 적지 않는다.
+
+4·5단계로 빠졌거나 검증 자체가 불가능했다면, 사용자에게 `jira-tools.transitions` 설정을 권고해 다음 실행부터 묻지 않도록 안내한다 (13단계의 설정 권고 블록).
 
 ### 12. AI 라벨 추가
 
@@ -300,5 +335,5 @@ curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/3/issue/{이슈키}/transi
 
 이번 실행에서 AskUserQuestion 으로 받은 값이 있었다면, 작업 완료 후 [../../reference/config-recommendation.md](../../reference/config-recommendation.md) 의 출력 포맷대로 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
-- **포함**: AskUserQuestion 으로 받은 값 (예: `baseUrl`, `email`, `apiTokenFile`, `runtime-verify` 의 `modules`·`ui`)
+- **포함**: AskUserQuestion 으로 받은 값 (예: `baseUrl`, `email`, `apiTokenFile`, `runtime-verify` 의 `modules`·`ui`). 11단계에서 전환을 사용자가 골랐거나 후보를 못 찾았다면 `transitions` 를 함께 권고한다
 - **제외**: CLI 인자(이슈 키, `--source`), 추론 후 승인받은 브랜치명, AI 가 판단한 값(검증 결과, 댓글 본문)

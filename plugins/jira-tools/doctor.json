@@ -11,7 +11,8 @@
       "projects"
     ],
     "optional": [
-      "cloudId"
+      "cloudId",
+      "transitions"
     ]
   },
   "files": [

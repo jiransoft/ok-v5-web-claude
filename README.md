@@ -225,7 +225,7 @@ echo '.claude/plugins.json' >> .gitignore
 
 | 플러그인 | 필수 키 | 선택 키 |
 |----------|---------|---------|
-| **jira-tools** | `baseUrl`, `email`, `apiTokenFile`, `projects` | `cloudId` — 프로젝트별 값(assignee·issueTypes·components·customFields)은 `projects.<키>` 안에 |
+| **jira-tools** | `baseUrl`, `email`, `apiTokenFile`, `projects` | `cloudId`, `transitions`(상태 전환 이름 고정) — 프로젝트별 값(assignee·issueTypes·components·customFields)은 `projects.<키>` 안에 |
 | **git-workflow** | — | `defaultAssignee`, `defaultReviewer`, `defaultLabels`, `moduleRoot`, `project`, `commit` |
 | **release-tools** | — | `project`, `swaggerBaseUrl`, `modules` |
 | **postman-tools** | `workspaceId`, `workspaceName`, `apiKey` | `backendStack`, `services`, `collections`(별칭→컬렉션 UID 맵) |
@@ -243,6 +243,10 @@ echo '.claude/plugins.json' >> .gitignore
     "email": "you@example.com",
     "apiTokenFile": "~/.jira-token",
     "cloudId": "xxxxxxxx-xxxx-...",              // setup이 자동 조회 (선택)
+    "transitions": {                             // 상태 전환 이름 고정 (선택) — complete-issue
+      "done": "해결함",                           // 미지정 시 statusCategory 로 후보를 찾고, 애매하면 질문
+      "inProgress": "진행 중"
+    },
     "projects": {                                // 프로젝트별 설정 — 쓰는 프로젝트마다 한 항목
       "PROJ": {
         "assignee": "username",

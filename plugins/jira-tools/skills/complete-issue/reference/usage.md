@@ -26,7 +26,7 @@
   8. 초안 전문 확인
   9. 스크린샷을 이슈 첨부로 업로드
   10. 댓글 등록 (첨부 이미지 인라인 렌더)
-  11. 상태 전환 — 전항 통과면 해결됨, 실패 있으면 진행 중
+  11. 상태 전환 — statusCategory 로 판별 (통과→done, 실패→indeterminate)
   12. AI 라벨 추가
   13. 런타임·worktree 정리
 
@@ -36,5 +36,6 @@
 
 필요 설정:
   jira-tools     baseUrl · email · apiTokenFile
+                 transitions (선택) — 상태 전환 이름 고정. 미지정 시 statusCategory 로 자동 판별
   runtime-verify modules (기동할 모듈), ui · credentialsFile (브라우저 검증 시)
 ```

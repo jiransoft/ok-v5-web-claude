@@ -51,10 +51,18 @@ curl -s -H "Authorization: Basic $AUTH" "<baseUrl>/rest/api/3/project/<projectKe
 curl -s -H "Authorization: Basic $AUTH" "<baseUrl>/rest/api/3/issue/createmeta?projectKeys=<projectKey>&expand=projects.issuetypes.fields"
 # 전체 필드(커스텀 필드 ID 확인용)
 curl -s -H "Authorization: Basic $AUTH" "<baseUrl>/rest/api/3/field"
+# 워크플로우 상태 + 카테고리(전환 이름 확인용)
+curl -s -H "Authorization: Basic $AUTH" "<baseUrl>/rest/api/3/project/<projectKey>/statuses" \
+  | jq -r '.[].statuses[] | "\(.name)\t\(.statusCategory.key)"' | sort -u
 ```
 
 - `issueTypes` ← createmeta의 `projects[].issuetypes[]{name→id}`.
 - `components` ← project의 `components[]{name→id}`.
+- `transitions` ← statuses 조회 결과에서 카테고리별로 고른다. `done` ← `statusCategory.key` 가
+  `done` 인 상태명, `inProgress` ← `indeterminate` 인 상태명. 카테고리마다 후보가 여럿이면
+  사용자에게 보여주고 고르게 한다. 워크플로우 이름은 사이트마다 다르므로(`해결됨` · `해결함` ·
+  `완료`) 추측하지 않는다. 후보가 하나도 없으면 이 키를 생략한다 — `complete-issue` 가
+  실행 시점에 카테고리로 다시 판별한다.
 - `customFields` ← `/field`에서 필요한 커스텀 필드(예: issueCategory)의 `customfield_xxxxx` id, 허용값은 createmeta의 `allowedValues`에서.
 - 인증 실패(401)·프로젝트 없음(404)이면 중단하고 사용자에게 보고(토큰/이메일/키 확인).
 
@@ -77,6 +85,7 @@ curl -s -H "Authorization: Basic $AUTH" "<baseUrl>/rest/api/3/field"
     "email": "you@example.com",
     "apiTokenFile": "~/.jira-token",
     "cloudId": "<자동조회>",
+    "transitions": { "done": "<완료 전환명>", "inProgress": "<진행중 전환명>" },
     "projects": {
       "OKEP": {
         "assignee": "username",
