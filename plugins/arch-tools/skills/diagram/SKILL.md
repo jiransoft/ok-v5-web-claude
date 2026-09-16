@@ -2,7 +2,7 @@
 name: diagram
 description: 코드를 분석하여 Mermaid 다이어그램 문서를 생성합니다. 아키텍처, 시퀀스, 플로우차트 등을 자동 선택하고, --pdf 시 제목·설명·구성요소 표를 포함한 자립형 PDF도 만듭니다.
 when_to_use: 사용자가 "다이어그램 그려줘", "아키텍처 도식화해줘", "시퀀스 다이어그램 만들어줘", "이 흐름 플로우차트로 그려줘", "구조도 만들어줘", "draw diagram", "Mermaid 다이어그램" 등 코드를 분석해 아키텍처·시퀀스·플로우차트 등을 그림으로 정리하려 할 때.
-allowed-tools: Bash(git *), Bash(npx *), Bash(node *), Bash(find *), Bash(grep *), Bash(rm *), Bash(mkdir *), Read, Grep, Glob, Write, Edit, Agent
+allowed-tools: Bash(git *), Bash(npx *), Bash(node *), Bash(find *), Bash(grep *), Bash(rm *), Bash(mkdir *), Bash(cd *), Read, Grep, Glob, Write, Edit, Agent
 argument-hint: <대상 설명> [--source <branch>] [--pdf] [--output <path>]
 ---
 
@@ -22,22 +22,24 @@ argument-hint: <대상 설명> [--source <branch>] [--pdf] [--output <path>]
   - `--output <path>` → 출력 디렉토리 (기본: `docs/`)
 - 나머지 텍스트 → 다이어그램 대상 설명
 
-**출력 경로는 여기서 절대경로로 고정한다.** 0절 worktree 생성보다 먼저 수행해야 한다.
-상대경로인 채로 두면 `--source` 사용 시 산출물이 worktree 안에 생성되고, 정리 단계에서 유실된다:
+### 출력 위치
 
-```bash
-git rev-parse --show-toplevel        # → repo 루트
-mkdir -p <OUT_DIR>
-```
+**산출물은 분석한 코드와 같은 계보에 남는다.** 로컬에 체크아웃된 브랜치는 분석 대상과
+전혀 무관할 수 있다. 거기에 문서를 떨구면 엉뚱한 브랜치의 변경분이 된다.
 
-`--output` 이 절대경로면 그대로 쓰고, 상대경로(기본 `docs/`)면 repo 루트 기준으로 해석해
-**하나의 절대경로 문자열로 확정한다.** 이 값을 아래에서 `<OUT_DIR>` 로 표기한다.
+| `--source` | 산출물 위치 |
+|------------|------------|
+| 미지정 | 현재 워킹트리의 `--output` (커밋하지 않는다) |
+| 지정 | 0절 worktree 안의 `--output` → `docs/diagram-<슬러그>` 브랜치에 커밋 |
+
+`--source` 를 쓰면 **source 브랜치 자체는 건드리지 않는다.** 거기서 파생한 문서 전용
+브랜치에 커밋하므로, 사용자는 그 브랜치를 보고 판단하면 된다.
+
+산출물 디렉토리를 **하나의 절대경로로 확정**하고, 이 값을 아래에서 `<OUT_DIR>` 로 표기한다.
 
 > **셸 변수를 쓰지 말 것.** Bash 호출마다 셸이 새로 뜨므로 변수는 다음 호출까지 살아남지 않는다.
 > 빈 값으로 전개돼 `/` 아래에 쓰게 된다.
 > 이후 모든 명령에는 확정한 절대경로를 **리터럴로 직접 써넣는다.**
-
-이후 `.md` / `.pdf` / 모든 임시 파일은 이 절대경로 아래에만 읽고 쓴다.
 
 ## 실행 절차
 
@@ -46,24 +48,27 @@ mkdir -p <OUT_DIR>
 `--source`가 지정된 경우, 격리된 worktree를 생성하여 해당 브랜치 코드 기준으로 분석한다.
 미지정 시 이 단계를 건너뛰고 현재 디렉토리에서 분석한다.
 
+`jira-tools:impl-issue` 1-1절과 같은 2단 구조를 쓴다:
+
 ```bash
+# <slug> = source 브랜치명의 / 와 특수문자를 - 로 치환 (feat/x → feat-x)
 # 스테일 worktree 자기 치유 (이전 실행이 중단돼 남아 있으면 제거)
-git worktree remove --force /tmp/wt-diagram 2>/dev/null; git worktree prune; rm -rf /tmp/wt-diagram
-git worktree add --detach /tmp/wt-diagram <source>
+git worktree remove --force /tmp/wt-diagram-<slug> 2>/dev/null; git worktree prune; rm -rf /tmp/wt-diagram-<slug>
+# 1) detached HEAD로 worktree 생성 (브랜치 잠금 충돌 방지)
+git worktree add --detach /tmp/wt-diagram-<slug> <source>
+
+# 2) worktree로 이동하여 문서용 작업 브랜치 생성
+cd /tmp/wt-diagram-<slug>
+git checkout -b docs/diagram-<주제 슬러그>
 ```
 
-- 이후 모든 코드 읽기(Read, Grep, Glob)는 worktree 경로(`/tmp/wt-diagram`)에서 수행한다
-- **worktree 안에는 어떤 파일도 만들지 않는다.** 문서·PDF·임시 파일(`.mmd`/`.svg`/`.html`)은
-  전부 인자 파싱에서 확정한 `<OUT_DIR>` 절대경로에 생성한다
-  - worktree에 untracked 파일이 남으면 `git worktree remove` 가
-    `contains modified or untracked files` 로 **실패**한다 (exit 128)
-  - 그러면 스테일 worktree가 남고, 다음 실행의 자기 치유 `--force` + `rm -rf` 가
-    거기 있던 산출물을 말없이 삭제한다
-- 작업 완료 후 worktree를 정리한다:
-  ```bash
-  git worktree remove /tmp/wt-diagram
-  ```
-  실패하면 worktree 안에 파일을 만든 것이다. `<OUT_DIR>`로 옮긴 뒤 다시 정리한다.
+- **1번의 `--detach` 를 빼지 않는다.** `<source>` 가 이미 다른 워크트리나 본체에
+  체크아웃돼 있으면 `is already checked out at` 으로 실패한다
+- **2번을 건너뛰지 않는다.** detached HEAD 에서 커밋하면 어느 ref에도 닿지 않는
+  고아 커밋이 되어, worktree 제거와 함께 사라진다
+- 경로에 `<slug>` 를 넣어 source 별로 분리한다. 고정 경로를 쓰면 동시에 돌린
+  다른 분석의 산출물을 덮어쓴다
+- 이후 모든 코드 읽기(Read, Grep, Glob)와 산출물 생성은 worktree 경로에서 수행한다
 
 ### 1. 코드 분석
 
@@ -195,6 +200,38 @@ const puppeteer = require('puppeteer');
 
 `<OUT_DIR>` 안의 `.mmd`, `.svg`, `.html` 임시 파일을 삭제한다. `.md`와 `.pdf`만 남긴다.
 
+### 5. 커밋 & Worktree 정리 (`--source` 사용 시)
+
+`--source` 를 쓰지 않았으면 이 단계를 건너뛴다 — 산출물만 남기고 커밋하지 않는다.
+
+4-5의 임시 파일 정리를 **먼저** 끝낸 뒤 커밋한다. `.mmd`/`.svg`/`.html` 이 남아 있으면
+`git status` 를 더럽히고 의도치 않게 스테이징된다.
+
+```bash
+git -C /tmp/wt-diagram-<slug> add <OUT_DIR 의 worktree 기준 상대경로>
+git -C /tmp/wt-diagram-<slug> commit -m "docs: <주제> 다이어그램 추가"
+git worktree remove /tmp/wt-diagram-<slug>
+```
+
+- 커밋이 `docs/diagram-<주제 슬러그>` 브랜치에 남으므로 worktree를 제거해도 유실되지 않는다
+- **푸시하지 않는다.** 사용자가 브랜치를 확인한 뒤 판단한다
+- `git worktree remove` 가 실패하면 정리 안 된 임시 파일이 남은 것이다.
+  지우고 다시 시도한다
+
+## 결과 안내
+
+`--source` 사용 시 산출물이 로컬 워킹트리에 없으므로, 어디에 있는지 반드시 알린다:
+
+```
+docs/<주제>.md, docs/<주제>.pdf 를 생성했습니다.
+
+  브랜치: docs/diagram-<주제 슬러그>  (<source> 에서 파생)
+  확인:   git log -p docs/diagram-<주제 슬러그>
+  체크아웃: git switch docs/diagram-<주제 슬러그>
+
+현재 체크아웃된 브랜치는 건드리지 않았습니다. 푸시는 하지 않았습니다.
+```
+
 ## 출력 예시
 
 `--pdf` 없는 경우:
@@ -207,3 +244,6 @@ docs/<주제>.md          # Mermaid 다이어그램 포함 문서
 docs/<주제>.md          # Mermaid 다이어그램 포함 문서
 docs/<주제>.pdf         # 제목·설명·구성요소 표를 포함한 자립형 PDF
 ```
+
+`--source` 를 함께 쓴 경우 위 파일들은 현재 워킹트리가 아니라
+`docs/diagram-<주제 슬러그>` 브랜치의 커밋으로 남는다.

@@ -2,7 +2,7 @@
 name: adr
 description: 코드를 분석하여 Architecture Decision Record(설계 의사결정 문서)를 생성합니다. 인수인계/온보딩/향후 확장 참고용.
 when_to_use: 사용자가 "ADR 만들어줘", "설계 의사결정 문서 작성해줘", "이 구조 왜 이렇게 짰는지 정리해줘", "아키텍처 결정 기록 남겨줘", "create ADR", "architecture decision record" 등 특정 설계의 배경·대안·확장 방향을 문서로 정리하려 할 때.
-allowed-tools: Bash(git *), Read, Grep, Glob, Write, Edit, Agent
+allowed-tools: Bash(git *), Bash(cd *), Read, Grep, Glob, Write, Edit, Agent
 argument-hint: <대상 설명> [--source <branch>] [--output <path>] [--status <status>] [--with-diagram]
 ---
 
@@ -23,6 +23,22 @@ argument-hint: <대상 설명> [--source <branch>] [--output <path>] [--status <
   - `--with-diagram` → Mermaid 다이어그램 포함 여부
 - 나머지 텍스트 → ADR 대상 설명
 
+### 출력 위치
+
+**산출물은 분석한 코드와 같은 계보에 남는다.** 로컬에 체크아웃된 브랜치는 분석 대상과
+전혀 무관할 수 있다. 거기에 문서를 떨구면 엉뚱한 브랜치의 변경분이 된다.
+
+| `--source` | 산출물 위치 |
+|------------|------------|
+| 미지정 | 현재 워킹트리의 `--output` (커밋하지 않는다) |
+| 지정 | 0절 worktree 안의 `--output` → `docs/adr-<슬러그>` 브랜치에 커밋 |
+
+`--source` 를 쓰면 **source 브랜치 자체는 건드리지 않는다.** 거기서 파생한 문서 전용
+브랜치에 커밋하므로, 사용자는 그 브랜치를 보고 판단하면 된다.
+
+산출물 디렉토리는 **하나의 절대경로로 확정**해 이후 명령에 리터럴로 써넣는다.
+Bash 호출마다 셸이 새로 뜨므로 셸 변수는 다음 호출까지 살아남지 않는다.
+
 ## 실행 절차
 
 ### 0. Worktree 생성 (`--source` 지정 시)
@@ -30,18 +46,38 @@ argument-hint: <대상 설명> [--source <branch>] [--output <path>] [--status <
 `--source`가 지정된 경우, 격리된 worktree를 생성하여 해당 브랜치 코드 기준으로 분석한다.
 미지정 시 이 단계를 건너뛰고 현재 디렉토리에서 분석한다.
 
+`jira-tools:impl-issue` 1-1절과 같은 2단 구조를 쓴다:
+
 ```bash
+# <slug> = source 브랜치명의 / 와 특수문자를 - 로 치환 (feat/x → feat-x)
 # 스테일 worktree 자기 치유 (이전 실행이 중단돼 남아 있으면 제거)
-git worktree remove --force /tmp/wt-adr 2>/dev/null; git worktree prune; rm -rf /tmp/wt-adr
-git worktree add --detach /tmp/wt-adr <source>
+git worktree remove --force /tmp/wt-adr-<slug> 2>/dev/null; git worktree prune; rm -rf /tmp/wt-adr-<slug>
+# 1) detached HEAD로 worktree 생성 (브랜치 잠금 충돌 방지)
+git worktree add --detach /tmp/wt-adr-<slug> <source>
+
+# 2) worktree로 이동하여 문서용 작업 브랜치 생성
+cd /tmp/wt-adr-<slug>
+git checkout -b docs/adr-<주제 슬러그>
 ```
 
-- 이후 모든 코드 읽기(Read, Grep, Glob)는 worktree 경로(`/tmp/wt-adr`)에서 수행한다
-- 문서 출력은 원래 repo의 `--output` 경로에 생성한다
-- 작업 완료 후 worktree를 정리한다:
-  ```bash
-  git worktree remove /tmp/wt-adr
-  ```
+- **1번의 `--detach` 를 빼지 않는다.** `<source>` 가 이미 다른 워크트리나 본체에
+  체크아웃돼 있으면 `is already checked out at` 으로 실패한다
+- **2번을 건너뛰지 않는다.** detached HEAD 에서 커밋하면 어느 ref에도 닿지 않는
+  고아 커밋이 되어, worktree 제거와 함께 사라진다
+- 경로에 `<slug>` 를 넣어 source 별로 분리한다
+- 이후 모든 코드 읽기(Read, Grep, Glob)와 산출물 생성은 worktree 경로에서 수행한다
+
+작업이 끝나면 커밋하고 worktree를 정리한다:
+
+```bash
+git -C /tmp/wt-adr-<slug> add <OUT_DIR 의 worktree 기준 상대경로>
+git -C /tmp/wt-adr-<slug> commit -m "docs: <주제> ADR 추가"
+git worktree remove /tmp/wt-adr-<slug>
+```
+
+- 커밋이 `docs/adr-<주제 슬러그>` 브랜치에 남으므로 worktree를 제거해도 유실되지 않는다
+- **푸시하지 않는다.** 사용자가 브랜치를 확인한 뒤 판단한다
+- 결과를 알릴 때 산출물이 현재 워킹트리가 아니라 그 브랜치에 있다는 사실을 명시한다
 
 ### 1. 코드 분석
 
