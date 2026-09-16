@@ -4,6 +4,7 @@
   "setup": null,
   "commands": [
     { "name": "git", "required": true },
-    { "name": "npx", "required": true, "note": "Mermaid 다이어그램·PDF 렌더" }
+    { "name": "npx", "required": true, "note": "Mermaid 다이어그램·PDF 렌더" },
+    { "name": "node", "required": true, "note": "Puppeteer 로 PDF 페이지 렌더" }
   ]
 }
