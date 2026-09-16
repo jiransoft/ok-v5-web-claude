@@ -8,7 +8,7 @@
 사용법:
   /diagram <대상 설명>                    Mermaid 다이어그램을 .md에 포함하여 생성
   /diagram <대상 설명> --source feat/x    특정 브랜치 코드 기준으로 분석
-  /diagram <대상 설명> --pdf              추가로 PDF 파일도 생성
+  /diagram <대상 설명> --pdf              제목·설명·구성요소 표를 포함한 PDF도 생성
   /diagram <대상 설명> --output docs/     출력 경로 지정 (기본: docs/)
 
 예시:
