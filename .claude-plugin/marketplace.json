@@ -73,7 +73,7 @@
     {
       "name": "arch-tools",
       "source": "./plugins/arch-tools",
-      "description": "코드 분석 기반 아키텍처 문서화 — ADR(설계 의사결정 기록)과 Mermaid 다이어그램/PDF 생성",
+      "description": "코드 분석 기반 아키텍처 문서화 — ADR(설계 의사결정 기록), Mermaid 다이어그램/PDF, 인터랙티브 HTML 다이어그램(archify 엔진 동봉)",
       "version": "1.3.0",
       "category": "documentation",
       "tags": [
@@ -81,6 +81,9 @@
         "adr",
         "diagram",
         "mermaid",
+        "interactive-html",
+        "archify",
+        "struct",
         "documentation"
       ]
     },

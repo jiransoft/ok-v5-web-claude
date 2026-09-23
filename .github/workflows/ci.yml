@@ -1,0 +1,31 @@
+# PR 마다 저장소 정합성과 벤더링된 archify 엔진을 검사한다.
+# 로컬에서는 같은 것을 `python3 scripts/preflight.py --deep` 과 `scripts/verify-archify-engine.sh` 로 돌린다.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: lint · preflight · archify 엔진
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: SKILL.md 구조 린터 (에러만 차단, 경고는 허용)
+        run: python3 scripts/lint-skills.py --warn-ok
+
+      - name: 레포 정합성 (버전 · 등록 · 매니페스트 · 문서 · 훅 selfTest)
+        run: python3 scripts/preflight.py --deep
+
+      - name: archify 엔진 무설치 검증 (doctor + 예제 5종 showcase validate)
+        run: scripts/verify-archify-engine.sh

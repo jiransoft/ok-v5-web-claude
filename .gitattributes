@@ -1,0 +1,5 @@
+# archify 엔진 벤더 디렉터리 — scripts/sync-archify.sh 가 생성한다. PR 리뷰 diff 에서 접힌다.
+plugins/arch-tools/archify/** linguist-vendored
+plugins/arch-tools/archify/assets/template.html linguist-generated=true
+plugins/arch-tools/archify/renderers/shared/generated-brand-marks.mjs linguist-generated=true
+plugins/arch-tools/archify/renderers/shared/generated-validators.mjs linguist-generated=true
