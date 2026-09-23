@@ -323,8 +323,8 @@ model: opus | sonnet | haiku       # 깊은 분석 opus, 표준 sonnet, 단순 �
 - **매주 월요일 09:00 KST** `.github/workflows/sync-archify.yml` 이 최신 안정 태그를 확인하고 새 버전이면
   `chore/sync-archify-<tag>` 브랜치로 PR 을 연다. **jiransoft 조직은 Actions 의 PR 생성을 막아 두었으므로**
   저장소 시크릿 `SYNC_ARCHIFY_TOKEN` 에 이 저장소 contents·pull-requests 쓰기 권한의 fine-grained PAT 를
-  넣어야 PR 단계가 동작한다 (조직 관리자가 정책을 풀면 기본 토큰으로도 된다). 시크릿이 없으면
-  변화 감지·동기화·검사까지는 돌고 PR 생성 단계에서 실패한다.
+  넣으면 PR 이 자동으로 열린다 (조직 관리자가 정책을 풀면 기본 토큰으로도 된다). 시크릿이 없으면
+  브랜치만 푸시하고 **compare 링크를 담은 이슈**를 만들어 사람이 한 번 눌러 PR 을 열게 한다.
   기본 토큰으로 만든 PR 은 `ci.yml` 을 깨우지 않으므로 같은 검사를 워크플로우 안에서 돌려 본문에 적는다.
 - 동기화 PR 리뷰 시 업스트림 `SKILL.md` 변경을 확인해 `skills/struct/SKILL.md` 절차에 반영할 것이 있는지 본다.
 - 라이선스 고지 파일(`LICENSE`, `THIRD_PARTY_NOTICES.md`, `assets/JetBrainsMono-OFL.txt`)은 벤더 디렉터리에 함께 둔다.

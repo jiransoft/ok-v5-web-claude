@@ -6,6 +6,7 @@
 #       fine-grained PAT. 조직이 "Allow GitHub Actions to create and approve pull requests" 를
 #       막아 둔 경우(jiransoft 조직이 그렇다) 이 경로만 동작하며, 이 토큰으로 만든 PR 은 ci.yml 도 깨운다.
 #   (b) 조직·저장소 설정에서 위 항목을 허용 — 그러면 기본 GITHUB_TOKEN 으로도 PR 이 만들어진다.
+#   둘 다 없으면 브랜치만 푸시하고, PR 을 한 번에 열 수 있는 compare 링크를 담은 이슈를 만든다.
 # 제약: 기본 GITHUB_TOKEN 으로 만든 PR 은 pull_request 워크플로우(ci.yml)를 깨우지 않는다.
 #       그래서 같은 검사를 여기서 먼저 돌리고 결과를 PR 본문에 적는다.
 name: Sync archify engine
@@ -24,6 +25,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write   # PR 생성이 정책에 막힐 때 이슈로 대체 알림
 
 concurrency:
   group: sync-archify
@@ -203,8 +205,35 @@ jobs:
           if [ -n "$existing" ]; then
             gh pr edit "$existing" --title "$title" --body-file /tmp/pr-body.md
             gh pr comment "$existing" --body "브랜치를 최신 실행 결과로 갱신했습니다 (검사: ${VERIFY_OUTCOME})."
+          elif gh pr create --base main --head "$branch" --title "$title" --body-file /tmp/pr-body.md 2>/tmp/pr-create.err; then
+            :
           else
-            gh pr create --base main --head "$branch" --title "$title" --body-file /tmp/pr-body.md
+            # 조직이 Actions 의 PR 생성을 막았고 PAT 시크릿도 없는 경우다. 브랜치는 이미 푸시됐으므로
+            # 이슈로 알리고 한 번에 PR 을 열 수 있는 compare 링크를 담는다. 이슈 생성은 정책에 막히지 않는다.
+            echo "PR 생성 실패, 이슈로 대체: $(cat /tmp/pr-create.err)" >> "$GITHUB_STEP_SUMMARY"
+            compare_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/main...${branch}?expand=1"
+            {
+              echo "브랜치 \`${branch}\` 를 푸시했지만 Actions 의 PR 생성이 조직 정책으로 막혀 있습니다."
+              echo
+              echo "**→ [이 링크를 눌러 PR 을 여세요](${compare_url})** (제목: \`${title}\`)"
+              echo
+              echo "PR 을 열면 ci.yml 이 실행됩니다. 아래는 PR 본문으로 쓸 내용입니다."
+              echo
+              echo "---"
+              cat /tmp/pr-body.md
+            } > /tmp/issue-body.md
+            issue_title="[sync-archify] ${TARGET} 동기화 브랜치 준비됨 — PR 열어 주세요"
+            existing_issue="$(gh issue list --state open --search "in:title \"[sync-archify] ${TARGET}\"" --json number --jq '.[0].number // empty')"
+            if [ -n "$existing_issue" ]; then
+              gh issue edit "$existing_issue" --body-file /tmp/issue-body.md
+              gh issue comment "$existing_issue" --body "브랜치를 최신 실행 결과로 갱신했습니다 (검사: ${VERIFY_OUTCOME})."
+              echo "이슈 갱신: $(gh issue view "$existing_issue" --json url --jq .url)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              url="$(gh issue create --title "$issue_title" --body-file /tmp/issue-body.md --assignee "$REVIEWER" 2>/dev/null \
+                || gh issue create --title "$issue_title" --body-file /tmp/issue-body.md)"
+              echo "이슈 생성: ${url}" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 0
           fi
           # 리뷰어 지정은 보조 단계다. PR 작성자와 같은 계정이면 거부되므로 실패를 PR 실패로 번지게 하지 않는다.
           if ! gh pr edit "$branch" --add-reviewer "$REVIEWER" 2>/tmp/reviewer.err; then
