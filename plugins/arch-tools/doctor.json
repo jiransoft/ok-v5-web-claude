@@ -4,7 +4,10 @@
   "setup": null,
   "commands": [
     { "name": "git", "required": true },
-    { "name": "npx", "required": true, "note": "Mermaid 다이어그램·PDF 렌더" },
-    { "name": "node", "required": true, "note": "Puppeteer 로 PDF 페이지 렌더" }
+    { "name": "npx", "required": true, "note": "diagram: Mermaid 다이어그램·PDF 렌더" },
+    { "name": "node", "required": true, "minVersion": 18, "note": "diagram: Puppeteer PDF 렌더 · struct: archify 엔진" }
+  ],
+  "files": [
+    { "path": "/Applications/Google Chrome.app", "required": false, "usedBy": "struct 의 브라우저 검사(visual-check)", "hint": "없으면 브라우저 검사는 skipped 로 보고된다. 다른 Chromium 은 ARCHIFY_CHROME 환경변수로 지정" }
   ]
 }

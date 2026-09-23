@@ -14,6 +14,8 @@ graph TB
             LINT["scripts/lint-skills.py<br/>SKILL.md 구조 린터"]
             BUMP[".claude/commands/bump-version.md<br/>버전 일괄 범프 + 태그 + 푸시"]
             CONTRIB["CONTRIBUTION.md<br/>저장소 컨벤션"]
+            SYNC["scripts/sync-archify.sh<br/>archify 엔진 벤더링 (고정 SHA/태그)"]
+            CI[".github/workflows<br/>ci.yml (PR 검사) · sync-archify.yml (월 09:00 동기화 PR)"]
         end
 
         subgraph PLUGINS["플러그인 (plugins/*)"]
@@ -22,7 +24,7 @@ graph TB
                 GW2["commit"]
             end
             RT["release-tools — 스킬 2<br/>release-note<br/>(gh CLI 사용)"]
-            AT["arch-tools — 스킬 2<br/>adr · diagram<br/>(설정·외부 연동 없음)"]
+            AT["arch-tools — 스킬 3<br/>adr · diagram · struct<br/>+ archify/ 벤더 엔진 (Node, 의존성 0)<br/>(설정·외부 연동 없음)"]
             subgraph CRS["code-review-suite"]
                 CRS1["code-review 스킬<br/>4인 병렬 오케스트레이션"]
                 CRS2["에이전트 5<br/>design·logic·perf·test<br/>+ 단독 code-reviewer"]
@@ -69,6 +71,9 @@ graph TB
 
     LINT -.->|"검사"| PLUGINS
     BUMP -.->|"버전 동기화"| MP
+    SYNC -.->|"벤더링"| AT
+    CI -.->|"PR 검사 · 주간 동기화 PR"| PLUGINS
+    UP["🌐 tt-a1i/archify<br/>(업스트림, MIT)"] -.->|"릴리즈 zip / 고정 SHA"| SYNC
 ```
 
 ## 배포 파이프라인
@@ -77,9 +82,21 @@ graph TB
 flowchart LR
     A["스킬 수정"] --> B["lint-skills.py<br/>에러 0 확인"]
     B --> C["commit 스킬<br/>컨벤션 커밋"]
-    C --> D["bump-version<br/>버전 표기 일괄 치환<br/>(marketplace + plugin.json + README)"]
+    C --> P["PR → CI<br/>lint · preflight · 엔진 doctor"]
+    P --> D["bump-version<br/>버전 표기 일괄 치환<br/>(marketplace + plugin.json + README)"]
     D --> E["git tag vX.Y.Z<br/>+ push --tags"]
     E --> F["사용자:<br/>claude plugin<br/>marketplace update"]
+```
+
+archify 엔진은 별도 궤도로 갱신된다. 사람은 리뷰·머지만 한다:
+
+```mermaid
+flowchart LR
+    S["매주 월 09:00 KST<br/>sync-archify.yml"] --> Q["업스트림 releases/latest<br/>≟ 벤더 package.json 버전"]
+    Q -->|"같거나 낮음"| N["Job Summary 한 줄<br/>종료"]
+    Q -->|"새 안정 태그"| R["scripts/sync-archify.sh &lt;tag&gt;<br/>zip 해제 · 제외 8파일 · UPSTREAM.md"]
+    R --> V["lint · preflight<br/>엔진 doctor · 예제 validate"]
+    V --> PR["chore/sync-archify-&lt;tag&gt;<br/>PR 생성/갱신 (reviewer 지정)"]
 ```
 
 ## 구성요소 설명
@@ -95,6 +112,10 @@ flowchart LR
 | `CLAUDE.md` (소비자) | 팀 공유 규칙 — 리뷰 규칙·커밋 규칙 | 스킬들이 훅으로 참조 (설정보다 우선순위 낮음) |
 | `scripts/lint-skills.py` | 프론트매터·구조·MCP 표기 검사 | 에러 시 릴리즈 차단, 경고는 무방 |
 | `bump-version` 커맨드 | 버전 치환 → README 동기화 → 태그 → 푸시 | 이 저장소 전용 (.claude/commands) |
+| `plugins/arch-tools/archify/` | 벤더링된 archify 엔진 (Node CLI·렌더러·뷰어 템플릿·스키마) | `struct` 스킬이 호출. 손으로 고치지 않음, 출처는 `UPSTREAM.md` |
+| `scripts/sync-archify.sh` | 업스트림 태그/SHA 를 받아 배포 파일만 벤더 디렉터리로 동기화 | 예제 HTML·업데이트 체커 제외, 네트워크 호출 0 |
+| `.github/workflows/ci.yml` | PR·main 푸시마다 lint · preflight · 엔진 검증 | 저장소의 유일한 CI |
+| `.github/workflows/sync-archify.yml` | 매주 월 09:00 KST 업스트림 안정 태그 확인 → 동기화 PR 자동 생성 | Actions 의 PR 생성 권한 설정 필요 |
 
 ## 설계 특징
 
@@ -111,7 +132,10 @@ flowchart LR
 | `plugins/<name>/.claude-plugin/plugin.json` | 플러그인 메타 (버전·설명·키워드) |
 | `plugins/git-workflow/skills/` | commit, create-pr, dev-report, setup |
 | `plugins/release-tools/skills/` | release-note, setup (gh CLI — 태그 간 diff 분석·GitHub Release 등록) |
-| `plugins/arch-tools/skills/` | adr, diagram (외부 연동 무관 — 코드 분석 → 문서 생성) |
+| `plugins/arch-tools/skills/` | adr, diagram, struct (외부 연동 무관 — 코드 분석 → 문서·인터랙티브 HTML 생성) |
+| `plugins/arch-tools/archify/` | 벤더링된 archify 엔진 + `UPSTREAM.md` (고정 SHA·제외 목록·재동기화 절차) |
+| `scripts/sync-archify.sh` · `scripts/verify-archify-engine.sh` · `scripts/semver-newer.mjs` | 엔진 동기화·검증 도구 (CI 와 공유) |
+| `.github/workflows/` | `ci.yml`, `sync-archify.yml` |
 | `plugins/writing-tools/skills/` | flex-style, setup (플렉스 테크블로그 문체 규칙·발췌 reference + `~/.claude/CLAUDE.md` 지시 블록 배선) |
 | `plugins/runtime-verify/skills/` | verify-stack, setup (이슈·브랜치별 포트 블록 기동 + 브라우저 검증) |
 | `plugins/doctor/scripts/check.py` | 설치 플러그인 진단 (플러그인별 doctor.json 매니페스트 기반) |

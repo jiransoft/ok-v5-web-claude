@@ -308,3 +308,21 @@ model: opus | sonnet | haiku       # 깊은 분석 opus, 표준 sonnet, 단순 �
   `--help` 출력과 정상 경로를 한 번 이상 돌려본다.
 - hud 같은 코드 플러그인(`*.mjs`)은 의존성 0·Node 빌트인만 사용 원칙을 유지하고, 어떤 입력에도
   statusline 이 크래시하지 않도록 최상위 `catch` 로 빈 줄을 보장한다.
+- **CI** (`.github/workflows/ci.yml`) 가 PR 마다 `lint-skills.py --warn-ok`, `preflight.py --deep`,
+  `scripts/verify-archify-engine.sh` 를 돌린다. 로컬에서 같은 셋을 먼저 돌리면 CI 에서 놀랄 일이 없다.
+
+## 벤더링된 외부 엔진 (arch-tools/archify)
+
+`plugins/arch-tools/archify/` 는 [tt-a1i/archify](https://github.com/tt-a1i/archify)(MIT) 의 배포본을
+그대로 담은 디렉터리다. `struct` 스킬이 `node .../archify/bin/archify.mjs` 로 호출한다.
+
+- **손으로 고치지 않는다.** 출처·SHA·제외 목록은 `UPSTREAM.md` 에 있다. 고칠 것이 있으면 업스트림에
+  기여하거나 `scripts/sync-archify.sh` 의 제외 목록·후처리에 넣는다.
+- **갱신은 `scripts/sync-archify.sh <tag|sha>` 로만 한다.** 태그면 릴리즈 zip, SHA 면 클론 + 업스트림
+  `stage-clean-skill.mjs`. 렌더된 예제 HTML 5개와 업데이트 체커 3파일은 항상 제외한다 (용량 4MB, 네트워크 0).
+- **매주 월요일 09:00 KST** `.github/workflows/sync-archify.yml` 이 최신 안정 태그를 확인하고 새 버전이면
+  `chore/sync-archify-<tag>` 브랜치로 PR 을 연다. 저장소 설정에서 **Actions 의 PR 생성 권한**
+  (Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests") 이 켜져 있어야 한다.
+  기본 토큰으로 만든 PR 은 `ci.yml` 을 깨우지 않으므로 같은 검사를 워크플로우 안에서 돌려 본문에 적는다.
+- 동기화 PR 리뷰 시 업스트림 `SKILL.md` 변경을 확인해 `skills/struct/SKILL.md` 절차에 반영할 것이 있는지 본다.
+- 라이선스 고지 파일(`LICENSE`, `THIRD_PARTY_NOTICES.md`, `assets/JetBrainsMono-OFL.txt`)은 벤더 디렉터리에 함께 둔다.
