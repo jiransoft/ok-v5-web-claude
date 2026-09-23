@@ -1,0 +1,204 @@
+# 매주 월요일 09:00 KST 에 archify 업스트림의 최신 안정 릴리즈를 확인하고, 벤더 버전보다 새로우면
+# scripts/sync-archify.sh 로 동기화한 뒤 검사 결과를 담은 PR 을 자동으로 연다. 사람은 리뷰·머지만 한다.
+#
+# 전제: 저장소 Settings → Actions → General → Workflow permissions 에서
+#       "Allow GitHub Actions to create and approve pull requests" 가 켜져 있어야 PR 생성이 된다.
+# 제약: 기본 GITHUB_TOKEN 으로 만든 PR 은 pull_request 워크플로우(ci.yml)를 깨우지 않는다.
+#       그래서 같은 검사를 여기서 먼저 돌리고 결과를 PR 본문에 적는다.
+name: Sync archify engine
+
+on:
+  schedule:
+    # UTC 00:00 = 월요일 09:00 KST. 정각은 Actions 가 붐벼 수십 분 늦게 시작할 수 있다.
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: '동기화할 업스트림 참조 (예: v2.17.0). 비우면 최신 안정 태그를 조회한다'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-archify
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: tt-a1i/archify
+  REVIEWER: nuhgnod
+
+jobs:
+  sync:
+    name: 업스트림 안정 태그 확인 → 동기화 PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: 현재 벤더 버전과 업스트림 최신 안정 태그 비교
+        id: probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          current="$(node -p "require('./plugins/arch-tools/archify/package.json').version")"
+          if [ -n "$INPUT_REF" ]; then
+            target="$INPUT_REF"
+          else
+            target="$(gh api "repos/${UPSTREAM_REPO}/releases/latest" --jq '.tag_name')"
+          fi
+          candidate="${target#v}"
+          if [[ "$candidate" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            newer="$(node scripts/semver-newer.mjs "$current" "$candidate")"
+          else
+            newer="true"   # 버전 형식이 아닌 참조(SHA)는 수동 실행에서만 오므로 그대로 진행한다
+          fi
+          {
+            echo "current=${current}"
+            echo "target=${target}"
+            echo "newer=${newer}"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "## archify 엔진 동기화 점검"
+            echo
+            echo "| 항목 | 값 |"
+            echo "|---|---|"
+            echo "| 현재 벤더 버전 | \`${current}\` |"
+            echo "| 업스트림 대상 | \`${target}\` |"
+            echo "| 동기화 필요 | ${newer} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 변화 없음
+        if: steps.probe.outputs.newer != 'true'
+        env:
+          CURRENT: ${{ steps.probe.outputs.current }}
+          TARGET: ${{ steps.probe.outputs.target }}
+        run: echo "현재 벤더 버전 ${CURRENT} 이 업스트림 ${TARGET} 이상이다. 할 일 없음."
+
+      - name: 동기화 실행
+        if: steps.probe.outputs.newer == 'true'
+        env:
+          TARGET: ${{ steps.probe.outputs.target }}
+        run: scripts/sync-archify.sh "$TARGET"
+
+      - name: 변경 여부 확인
+        if: steps.probe.outputs.newer == 'true'
+        id: diff
+        run: |
+          set -euo pipefail
+          git add -A plugins/arch-tools/archify
+          # UPSTREAM.md 는 시각이 바뀌어 항상 달라진다 — 엔진 파일 기준으로 판단한다
+          if git diff --cached --quiet -- plugins/arch-tools/archify ':(exclude)plugins/arch-tools/archify/UPSTREAM.md'; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "엔진 파일에 변화가 없다 (이미 동기화됨)" >> "$GITHUB_STEP_SUMMARY"
+            git reset -q
+            git checkout -q -- plugins/arch-tools/archify
+            exit 0
+          fi
+          skill_changed=false
+          notices_changed=false
+          git diff --cached --quiet -- plugins/arch-tools/archify/SKILL.md || skill_changed=true
+          git diff --cached --quiet -- plugins/arch-tools/archify/THIRD_PARTY_NOTICES.md || notices_changed=true
+          git diff --cached --stat > /tmp/diffstat.txt
+          {
+            echo "changed=true"
+            echo "skill_changed=${skill_changed}"
+            echo "notices_changed=${notices_changed}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 검사 (lint · preflight · 엔진 doctor · 예제 validate)
+        if: steps.diff.outputs.changed == 'true'
+        id: verify
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          {
+            python3 scripts/lint-skills.py --warn-ok
+            python3 scripts/preflight.py --deep
+            scripts/verify-archify-engine.sh
+          } 2>&1 | tee /tmp/verify.txt
+
+      - name: 업스트림 CHANGELOG 절 추출
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          TARGET: ${{ steps.probe.outputs.target }}
+        run: |
+          set -euo pipefail
+          version="${TARGET#v}"
+          : > /tmp/changelog-section.md
+          if curl -fsSL "https://raw.githubusercontent.com/${UPSTREAM_REPO}/${TARGET}/CHANGELOG.md" -o /tmp/CHANGELOG.md; then
+            awk -v ver="$version" 'index($0, "## [" ver "]") == 1 { f = 1; print; next } /^## \[/ { if (f) exit } f' \
+              /tmp/CHANGELOG.md > /tmp/changelog-section.md || true
+          fi
+          if [ ! -s /tmp/changelog-section.md ]; then
+            echo "_CHANGELOG 절을 찾지 못했다. 업스트림 릴리즈 노트를 직접 확인한다._" > /tmp/changelog-section.md
+          fi
+
+      - name: 브랜치 푸시 + PR 생성 또는 갱신
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ steps.probe.outputs.target }}
+          CURRENT: ${{ steps.probe.outputs.current }}
+          SKILL_CHANGED: ${{ steps.diff.outputs.skill_changed }}
+          NOTICES_CHANGED: ${{ steps.diff.outputs.notices_changed }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          set -euo pipefail
+          branch="chore/sync-archify-${TARGET}"
+          title="chore(arch-tools): archify 엔진 ${TARGET} 동기화"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -q -m "$title" -m "scripts/sync-archify.sh ${TARGET} 자동 실행 결과. 이전 버전 ${CURRENT}. 검사: ${VERIFY_OUTCOME}."
+          git fetch -q origin "$branch" || true
+          git push --force-with-lease origin "$branch"
+
+          {
+            echo "## archify 엔진 동기화: \`${CURRENT}\` → \`${TARGET}\`"
+            echo
+            echo "매주 월요일 점검 워크플로우가 \`scripts/sync-archify.sh ${TARGET}\` 를 실행해 만든 PR 입니다."
+            echo "벤더 파일은 업스트림 배포본과 같고, 제외 목록과 출처는 \`plugins/arch-tools/archify/UPSTREAM.md\` 에 있습니다."
+            echo
+            echo "| 항목 | 값 |"
+            echo "|---|---|"
+            echo "| 검사 (lint · preflight · 엔진 doctor · 예제 validate) | **${VERIFY_OUTCOME}** |"
+            echo "| 업스트림 SKILL.md 변경 | ${SKILL_CHANGED} |"
+            echo "| THIRD_PARTY_NOTICES 변경 | ${NOTICES_CHANGED} |"
+            echo "| 업스트림 릴리즈 | https://github.com/${UPSTREAM_REPO}/releases/tag/${TARGET} |"
+            echo
+            echo "### 리뷰 체크리스트"
+            echo "- [ ] 아래 CHANGELOG 절을 읽었다"
+            echo "- [ ] 업스트림 SKILL.md 변경이 있으면 diff 를 보고 \`plugins/arch-tools/skills/struct/SKILL.md\` 반영 여부를 판단했다"
+            echo "- [ ] 로컬에서 \`/arch-tools:struct\` 를 1회 실행해 HTML 이 생성되는 것을 확인했다"
+            echo "- [ ] THIRD_PARTY_NOTICES 변경이 있으면 고지 내용을 확인했다"
+            echo
+            echo "### 변경 파일"
+            echo '```'
+            cat /tmp/diffstat.txt
+            echo '```'
+            echo
+            echo "### 업스트림 CHANGELOG"
+            cat /tmp/changelog-section.md
+            echo
+            echo "### 검사 로그"
+            echo '```'
+            cat /tmp/verify.txt
+            echo '```'
+          } > /tmp/pr-body.md
+
+          existing="$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title" --body-file /tmp/pr-body.md
+            gh pr comment "$existing" --body "브랜치를 최신 실행 결과로 갱신했습니다 (검사: ${VERIFY_OUTCOME})."
+          else
+            gh pr create --base main --head "$branch" --title "$title" --body-file /tmp/pr-body.md --reviewer "$REVIEWER"
+          fi
+          echo "PR: $(gh pr view "$branch" --json url --jq .url)" >> "$GITHUB_STEP_SUMMARY"
