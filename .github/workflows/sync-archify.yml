@@ -1,8 +1,11 @@
 # 매주 월요일 09:00 KST 에 archify 업스트림의 최신 안정 릴리즈를 확인하고, 벤더 버전보다 새로우면
 # scripts/sync-archify.sh 로 동기화한 뒤 검사 결과를 담은 PR 을 자동으로 연다. 사람은 리뷰·머지만 한다.
 #
-# 전제: 저장소 Settings → Actions → General → Workflow permissions 에서
-#       "Allow GitHub Actions to create and approve pull requests" 가 켜져 있어야 PR 생성이 된다.
+# 전제: PR 생성 단계는 두 경로 중 하나가 필요하다.
+#   (a) 저장소 시크릿 SYNC_ARCHIFY_TOKEN — 이 저장소에 contents·pull-requests 쓰기 권한이 있는
+#       fine-grained PAT. 조직이 "Allow GitHub Actions to create and approve pull requests" 를
+#       막아 둔 경우(jiransoft 조직이 그렇다) 이 경로만 동작하며, 이 토큰으로 만든 PR 은 ci.yml 도 깨운다.
+#   (b) 조직·저장소 설정에서 위 항목을 허용 — 그러면 기본 GITHUB_TOKEN 으로도 PR 이 만들어진다.
 # 제약: 기본 GITHUB_TOKEN 으로 만든 PR 은 pull_request 워크플로우(ci.yml)를 깨우지 않는다.
 #       그래서 같은 검사를 여기서 먼저 돌리고 결과를 PR 본문에 적는다.
 name: Sync archify engine
@@ -144,7 +147,8 @@ jobs:
       - name: 브랜치 푸시 + PR 생성 또는 갱신
         if: steps.diff.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          # 시크릿이 있으면 PAT 로 PR 을 만든다 (조직 정책 우회 + ci.yml 트리거). 없으면 기본 토큰.
+          GH_TOKEN: ${{ secrets.SYNC_ARCHIFY_TOKEN || github.token }}
           TARGET: ${{ steps.probe.outputs.target }}
           CURRENT: ${{ steps.probe.outputs.current }}
           SKILL_CHANGED: ${{ steps.diff.outputs.skill_changed }}

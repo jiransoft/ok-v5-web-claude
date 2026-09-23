@@ -321,8 +321,10 @@ model: opus | sonnet | haiku       # 깊은 분석 opus, 표준 sonnet, 단순 �
 - **갱신은 `scripts/sync-archify.sh <tag|sha>` 로만 한다.** 태그면 릴리즈 zip, SHA 면 클론 + 업스트림
   `stage-clean-skill.mjs`. 렌더된 예제 HTML 5개와 업데이트 체커 3파일은 항상 제외한다 (용량 4MB, 네트워크 0).
 - **매주 월요일 09:00 KST** `.github/workflows/sync-archify.yml` 이 최신 안정 태그를 확인하고 새 버전이면
-  `chore/sync-archify-<tag>` 브랜치로 PR 을 연다. 저장소 설정에서 **Actions 의 PR 생성 권한**
-  (Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests") 이 켜져 있어야 한다.
+  `chore/sync-archify-<tag>` 브랜치로 PR 을 연다. **jiransoft 조직은 Actions 의 PR 생성을 막아 두었으므로**
+  저장소 시크릿 `SYNC_ARCHIFY_TOKEN` 에 이 저장소 contents·pull-requests 쓰기 권한의 fine-grained PAT 를
+  넣어야 PR 단계가 동작한다 (조직 관리자가 정책을 풀면 기본 토큰으로도 된다). 시크릿이 없으면
+  변화 감지·동기화·검사까지는 돌고 PR 생성 단계에서 실패한다.
   기본 토큰으로 만든 PR 은 `ci.yml` 을 깨우지 않으므로 같은 검사를 워크플로우 안에서 돌려 본문에 적는다.
 - 동기화 PR 리뷰 시 업스트림 `SKILL.md` 변경을 확인해 `skills/struct/SKILL.md` 절차에 반영할 것이 있는지 본다.
 - 라이선스 고지 파일(`LICENSE`, `THIRD_PARTY_NOTICES.md`, `assets/JetBrainsMono-OFL.txt`)은 벤더 디렉터리에 함께 둔다.
