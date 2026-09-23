@@ -4,7 +4,7 @@
     "name": "okep"
   },
   "metadata": {
-    "description": "Claude Code 플러그인 모음: 상태줄, GitHub, Jira, Figma 연동 및 코드 리뷰 워크플로우",
+    "description": "Claude Code 플러그인 모음: 상태줄, GitHub, Jira, Figma 연동 및 코드 리뷰 워크플로우, 기술 글 문체 작성",
     "version": "1.2.3"
   },
   "plugins": [
@@ -151,6 +151,20 @@
         "qa",
         "playwright",
         "worktree"
+      ]
+    },
+    {
+      "name": "writing-tools",
+      "source": "./plugins/writing-tools",
+      "description": "기술 블로그 글·기술 회고·아키텍처 설명 글을 플렉스(flex.team) 테크블로그 문체로 작성·교정하는 flex-style 스킬 + 기본 적용용 CLAUDE.md 배선 setup",
+      "version": "1.2.3",
+      "category": "writing",
+      "tags": [
+        "writing",
+        "tech-blog",
+        "style",
+        "flex",
+        "korean"
       ]
     }
   ],

@@ -34,6 +34,7 @@ graph TB
             DR["doctor — 스킬 1<br/>check (플러그인별 doctor.json 진단)"]
             HUD["hud — statusline<br/>launcher.mjs + bin/lib"]
             VIS["visualize — showme"]
+            WT["writing-tools — 스킬 2<br/>flex-style · setup<br/>(설정 없음 — CLAUDE.md 배선)"]
         end
     end
 
@@ -57,6 +58,7 @@ graph TB
     PJ --> GW & RT & JT & FT & PT & CRS & RV
     DR -.->|"설정·토큰·CLI 진단"| PJ
     CMD -.->|"리뷰 규칙·커밋 규칙 훅"| CRS & GW
+    WT -.->|"setup 이 flex-style<br/>기본 적용 블록 추가"| CMD
 
     GW --> GH
     RT --> GH
@@ -110,6 +112,7 @@ flowchart LR
 | `plugins/git-workflow/skills/` | commit, create-pr, dev-report, setup |
 | `plugins/release-tools/skills/` | release-note, setup (gh CLI — 태그 간 diff 분석·GitHub Release 등록) |
 | `plugins/arch-tools/skills/` | adr, diagram (외부 연동 무관 — 코드 분석 → 문서 생성) |
+| `plugins/writing-tools/skills/` | flex-style, setup (플렉스 테크블로그 문체 규칙·발췌 reference + `~/.claude/CLAUDE.md` 지시 블록 배선) |
 | `plugins/runtime-verify/skills/` | verify-stack, setup (이슈·브랜치별 포트 블록 기동 + 브라우저 검증) |
 | `plugins/doctor/scripts/check.py` | 설치 플러그인 진단 (플러그인별 doctor.json 매니페스트 기반) |
 | `plugins/code-review-suite/agents/` | design/logic/performance/test/code-reviewer |

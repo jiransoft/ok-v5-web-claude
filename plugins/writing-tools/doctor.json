@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "plugin": "writing-tools",
+  "setup": "/writing-tools:setup",
+  "files": [
+    { "path": "~/.claude/CLAUDE.md", "required": false, "usedBy": "setup (flex-style 기본 적용 지시 블록)", "hint": "/writing-tools:setup 이 마커 블록을 추가한다. 없어도 flex-style 은 when_to_use 매칭으로 동작" }
+  ],
+  "commands": [
+    { "name": "git", "required": true, "note": "setup --project 에서 본체 레포 루트 판별" }
+  ]
+}

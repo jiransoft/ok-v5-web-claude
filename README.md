@@ -18,7 +18,7 @@ Claude Code 플러그인 마켓플레이스 — GitHub·Jira·Figma·Postman 연
 | **runtime-verify** | Jira 이슈·브랜치별 포트 블록으로 애플리케이션 모듈을 병렬 기동하고 브라우저로 검증 시나리오를 확인 (detached worktree, context 격리) | [`verify-stack`](plugins/runtime-verify/skills/verify-stack/SKILL.md) | 1.2.3 |
 | **doctor** | 설치된 플러그인의 설정·토큰·CLI·MCP·훅 배선을 진단하고 조치를 안내 (플러그인별 `doctor.json` 기반) | [`check`](plugins/doctor/skills/check/SKILL.md) | 1.2.3 |
 
-### 개인 선택 6종
+### 개인 선택 7종
 
 필요한 사람만 골라 설치합니다.
 
@@ -30,6 +30,7 @@ Claude Code 플러그인 마켓플레이스 — GitHub·Jira·Figma·Postman 연
 | **arch-tools** | 코드 분석 기반 아키텍처 문서화 (ADR·Mermaid 다이어그램/PDF) | [`adr`](plugins/arch-tools/skills/adr/SKILL.md), [`diagram`](plugins/arch-tools/skills/diagram/SKILL.md) | 1.2.3 |
 | **postman-tools** | Postman 컬렉션 request 생성/수정, example 자동 생성, docs/request 검증 | [`postman-request`](plugins/postman-tools/skills/postman-request/SKILL.md), [`postman-example`](plugins/postman-tools/skills/postman-example/SKILL.md), [`postman-docs-review`](plugins/postman-tools/skills/postman-docs-review/SKILL.md) | 1.2.3 |
 | **figma-tools** | Figma 코멘트 조회·작성·삭제 | [`figma-comment`](plugins/figma-tools/skills/figma-comment/SKILL.md) | 1.2.3 |
+| **writing-tools** | 기술 블로그 글·기술 회고·아키텍처 설명 글을 플렉스 테크블로그 문체로 작성·교정 (릴리즈 노트·Jira 댓글 등 실무 문서는 제외) | [`flex-style`](plugins/writing-tools/skills/flex-style/SKILL.md) | 1.2.3 |
 
 > 위 표의 "주요 스킬"은 핵심 스킬만 표기했습니다. `visualize`·`arch-tools`·`doctor`를 제외한 모든 플러그인은 설정/활성화용 `setup` 스킬도 함께 제공합니다 — [Setup](#setup) 참고.
 
@@ -94,7 +95,7 @@ claude plugin install runtime-verify@okep-butler -s local
 claude plugin install doctor@okep-butler -s local
 ```
 
-**개인 선택 6종** — 필요한 것만 골라 설치합니다.
+**개인 선택 7종** — 필요한 것만 골라 설치합니다.
 
 ```bash
 claude plugin install hud@okep-butler -s user            # 상태줄 — 레포 무관, 전역 추천
@@ -103,6 +104,7 @@ claude plugin install visualize@okep-butler -s local
 claude plugin install arch-tools@okep-butler -s local
 claude plugin install postman-tools@okep-butler -s local
 claude plugin install figma-tools@okep-butler -s local
+claude plugin install writing-tools@okep-butler -s user  # 기술 글 문체(flex-style) — 레포 무관, 전역 추천
 ```
 
 스코프 정리 — `-s local` 은 **현재 레포에서만 + 개인 설정**(`.claude/settings.local.json`, git 미공유), `-s user` 는 개인 전역,
@@ -162,7 +164,7 @@ claude plugin marketplace update
 | **runtime-verify** | `/runtime-verify:setup` | 레포 스캔으로 **모듈 후보 제안** + 포트 슬롯 설계·`prepare` 구성 |
 | **doctor** | — | 설정 불필요 (`/doctor:check` 로 나머지 플러그인을 진단) |
 
-**개인 선택 6종** — 설치한 사람만, 자기 것만:
+**개인 선택 7종** — 설치한 사람만, 자기 것만:
 
 | 플러그인 | 셋업 명령 | 셋업이 해주는 일 (자동 조회 포함) |
 |----------|-----------|-----------------------------------|
@@ -170,6 +172,7 @@ claude plugin marketplace update
 | **release-tools** | `/release-tools:setup` | `git remote`→`project`, 레포 구조→`modules` 유추, 기존 `git-workflow` 섹션 값 이전 |
 | **postman-tools** | `/postman-tools:setup` | apiKey로 **워크스페이스·컬렉션 목록 조회 → 별칭 지정**해 `collections` 구성 |
 | **figma-tools** | `/figma-tools:setup` | `~/.figma-token` 안내 + `GET /v1/me` 유효성 검증 |
+| **writing-tools** | `/writing-tools:setup` | `~/.claude/CLAUDE.md` 끝에 flex-style 기본 적용 지시 블록 추가 (`--project` 로 레포 CLAUDE.md 선택, `--remove` 로 해제). 셋업 없이도 `when_to_use` 매칭으로 동작 |
 | **visualize** | — | 설정 불필요 |
 | **arch-tools** | — | 설정 불필요 |
 
@@ -213,7 +216,7 @@ Claude Code는 플러그인이 메인 `statusLine`을 자동으로 켜지 못합
 
 > 대부분의 경우 [Setup](#setup)의 셋업 마법사를 쓰면 이 섹션을 손댈 필요가 없습니다. 아래는 **수동 구성·키 레퍼런스**입니다.
 
-각 플러그인(`hud`·`visualize`·`arch-tools` 제외)은 프로젝트의 `.claude/plugins.json`에서 설정을 읽습니다. 파일이 없거나 값이 누락되면 사용자에게 질문합니다.
+각 플러그인(`hud`·`visualize`·`arch-tools`·`writing-tools` 제외)은 프로젝트의 `.claude/plugins.json`에서 설정을 읽습니다. 파일이 없거나 값이 누락되면 사용자에게 질문합니다.
 
 > ⚠️ `.claude/plugins.json`에는 Cloud ID·URL 등 민감 정보가 포함될 수 있으니 `.gitignore`에 추가하세요(셋업이 자동 처리). 토큰·비밀번호 같은 민감 값은 파일에 **직접 넣지 말고** `*File`/`credentialsFile` 경로로 분리하세요.
 
