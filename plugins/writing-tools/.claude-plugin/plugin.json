@@ -1,0 +1,9 @@
+{
+  "name": "writing-tools",
+  "version": "1.2.3",
+  "description": "기술 블로그 글·기술 회고·아키텍처 설명 글을 플렉스(flex.team) 테크블로그 backend 연재 문체로 작성·교정하는 flex-style 스킬과, 그 문체를 기술 글 요청에 기본 적용하도록 CLAUDE.md 를 배선하는 setup",
+  "author": {
+    "name": "okep"
+  },
+  "keywords": ["writing", "tech-blog", "style", "flex", "korean"]
+}
