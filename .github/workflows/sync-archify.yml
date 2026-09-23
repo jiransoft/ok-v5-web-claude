@@ -31,7 +31,8 @@ concurrency:
 
 env:
   UPSTREAM_REPO: tt-a1i/archify
-  REVIEWER: nuhgnod
+  # 저장소 협업자 계정이어야 한다. PAT 소유자와 같은 계정이면 GitHub 이 셀프 리뷰 요청을 거부하므로 실패해도 PR 은 유지한다.
+  REVIEWER: jiran-donghun
 
 jobs:
   sync:
@@ -203,6 +204,10 @@ jobs:
             gh pr edit "$existing" --title "$title" --body-file /tmp/pr-body.md
             gh pr comment "$existing" --body "브랜치를 최신 실행 결과로 갱신했습니다 (검사: ${VERIFY_OUTCOME})."
           else
-            gh pr create --base main --head "$branch" --title "$title" --body-file /tmp/pr-body.md --reviewer "$REVIEWER"
+            gh pr create --base main --head "$branch" --title "$title" --body-file /tmp/pr-body.md
+          fi
+          # 리뷰어 지정은 보조 단계다. PR 작성자와 같은 계정이면 거부되므로 실패를 PR 실패로 번지게 하지 않는다.
+          if ! gh pr edit "$branch" --add-reviewer "$REVIEWER" 2>/tmp/reviewer.err; then
+            echo "리뷰어 ${REVIEWER} 지정 실패: $(cat /tmp/reviewer.err)" >> "$GITHUB_STEP_SUMMARY"
           fi
           echo "PR: $(gh pr view "$branch" --json url --jq .url)" >> "$GITHUB_STEP_SUMMARY"
