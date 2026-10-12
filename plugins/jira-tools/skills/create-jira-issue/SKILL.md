@@ -2,7 +2,7 @@
 name: create-jira-issue
 description: Jira 이슈를 생성합니다. 컨텍스트(설명, 현상 등)를 받아 필드를 자동 결정하고 이슈를 생성합니다
 when_to_use: 사용자가 "Jira 이슈 만들어줘", "이슈 생성해줘", "버그 등록", "이거 티켓으로 올려줘", "create jira issue" 등 현상·요구사항 설명과 함께 새 Jira 이슈 등록을 요청할 때.
-allowed-tools: Bash(${CLAUDE_SKILL_DIR}/../../scripts/jira-issue.sh *), Bash(curl *), Bash(jq *), Read, Write, AskUserQuestion
+allowed-tools: Bash(${CLAUDE_SKILL_DIR}/../../scripts/jira-issue.sh *), Bash(curl *), Bash(jq *), Bash(command *), Read, Write, AskUserQuestion
 argument-hint: "[이슈 설명 또는 컨텍스트]"
 ---
 
@@ -149,7 +149,15 @@ ${CLAUDE_SKILL_DIR}/../../scripts/jira-issue.sh user --query "<이름 또는 이
 **설명을 먼저 파일로 쓴다.** 설명 본문을 셸 인자로 넘기지 않는다 — 로그·스택트레이스에 흔한
 `'` `"` `$` `\` 가 페이로드를 깨뜨린다. Write 도구로 `/tmp/jira-desc.md` 에 마크다운 평문을 쓴다.
 
-그 다음 스크립트로 생성한다. 설정 로드·ADF 변환·이스케이프·에러 처리는 스크립트가 한다.
+그 다음 스크립트로 생성한다. 설정 로드·서식 변환·이스케이프·에러 처리는 스크립트가 한다.
+설명 마크다운은 `pandoc` 으로 Jira wiki markup 으로 바꿔 v2 API 로 보낸다 (제목·중첩 목록·링크·표·코드 블록).
+pandoc 이 없으면 서식 없이 문단으로만 들어가므로, 생성 전에 먼저 확인한다.
+
+```bash
+command -v pandoc >/dev/null 2>&1 && echo "PANDOC_OK" || echo "PANDOC_MISSING"
+```
+
+`PANDOC_MISSING` 이면 `brew install pandoc` 을 권하고, 서식 없이 생성할지 확인받는다.
 
 ```bash
 ${CLAUDE_SKILL_DIR}/../../scripts/jira-issue.sh create \

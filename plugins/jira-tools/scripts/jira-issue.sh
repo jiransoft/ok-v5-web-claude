@@ -16,6 +16,9 @@
 #   jira-issue.sh user   --query <이름 또는 이메일>
 #   jira-issue.sh env
 #
+# --description-file 은 마크다운이다. pandoc 이 있으면 Jira 서식으로 변환하고,
+# 없으면 서식 없이 문단으로만 넣는다.
+#
 # 설정은 본체 레포 루트의 .claude/plugins.json 의 jira-tools 섹션에서 읽는다
 # (baseUrl · email · apiTokenFile · projects).
 # 성공 시 이슈 키(create) · accountId(user) · 첨부 파일명(attach) 을 stdout 에 낸다.
@@ -78,16 +81,23 @@ $(printf '%s' "$body" | jq -r '(.errorMessages // [])[], (.errors // {} | to_ent
 }
 
 # 마크다운 평문을 ADF 로 감싼다. 빈 문단은 버리고, 전부 비면 공백 문단 하나를 둔다
-# (Jira v3 는 description 이 비어 있으면 400 을 낸다).
-adf_from_file() { # adf_from_file <경로|-->
-  local src=${1:-}
-  if [ -z "$src" ] || [ "$src" = "--" ]; then printf '%s' ""; return; fi
-  [ -f "$src" ] || die "설명 파일이 없다: $src"
+# (Jira v3 는 description 이 비어 있으면 400 을 낸다). 서식은 적용되지 않는다 —
+# pandoc 이 없을 때만 쓰는 폴백이다.
+adf_from_file() { # adf_from_file <경로>
   jq -Rs '
     split("\n\n")
     | map(select(test("\\S")) | {type:"paragraph", content:[{type:"text", text:(.|ltrimstr("\n")|rtrimstr("\n"))}]})
     | {type:"doc", version:1, content: (if length == 0 then [{type:"paragraph",content:[{type:"text",text:" "}]}] else . end)}
-  ' < "$src"
+  ' < "$1"
+}
+
+# 마크다운을 Jira wiki markup 으로 바꿔 JSON 문자열로 낸다. resolve-issue·impl-issue·
+# complete-issue 가 댓글을 v2 로 보낼 때와 같은 변환이다. pandoc 의 jira writer 는 제목마다
+# {anchor:…} 를 붙이는데 (식별자를 꺼도 빈 anchor 가 남는다) 설명에는 필요 없으므로 지운다.
+wiki_from_file() { # wiki_from_file <경로>
+  pandoc -f gfm -t jira "$1" \
+    | sed -E 's/^(h[1-6]\. )\{anchor:[^}]*\}/\1/' \
+    | jq -Rs 'if test("\\S") then . else " " end'
 }
 
 cmd=${1-}; [ -n "$cmd" ] || die "하위 명령이 필요하다 (create|edit|label|attach|user|env)"
@@ -134,7 +144,18 @@ create)
   fi
   [ -n "$project" ]   || die "--project 가 필요하다 — plugins.json 의 projects: $(jq -re '."jira-tools".projects // {} | keys | join(", ")' "$CONF" 2>/dev/null)"
 
-  desc=$(adf_from_file "$descfile")
+  # 설명이 있으면 pandoc 으로 wiki markup 을 만들어 v2 로 보낸다 (v3 는 ADF 만 받는다).
+  # pandoc 이 없으면 v3 에 서식 없는 ADF 문단으로 보내고 경고한다.
+  desc=""; apiver=3
+  if [ -n "$descfile" ]; then
+    [ -f "$descfile" ] || die "설명 파일이 없다: $descfile"
+    if command -v pandoc >/dev/null 2>&1; then
+      desc=$(wiki_from_file "$descfile"); apiver=2
+    else
+      printf '경고: pandoc 이 없어 설명의 마크다운 서식(제목·목록·링크·표)이 적용되지 않는다. brew install pandoc\n' >&2
+      desc=$(adf_from_file "$descfile")
+    fi
+  fi
   payload=$(jq -n \
     --arg p "$project" --arg t "$issuetype" --arg s "$summary" \
     --arg parent "$parent" --arg comp "$component" \
@@ -146,8 +167,11 @@ create)
       + (if $comp   == "" then {} else {components:[{name:$comp}]} end)
       + $extra
     )}')
-  if [ "$dryrun" = 1 ]; then printf '%s\n' "$payload" | jq .; exit 0; fi
-  api POST /rest/api/3/issue "$payload" | jq -re '.key'
+  if [ "$dryrun" = 1 ]; then
+    printf 'POST /rest/api/%s/issue\n' "$apiver" >&2
+    printf '%s\n' "$payload" | jq .; exit 0
+  fi
+  api POST "/rest/api/$apiver/issue" "$payload" | jq -re '.key'
   ;;
 
 edit)
