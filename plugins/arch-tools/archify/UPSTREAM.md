@@ -6,12 +6,12 @@
 | 항목 | 값 |
 |------|-----|
 | 업스트림 | https://github.com/tt-a1i/archify |
-| 요청 참조 | `8809b273c278a813a47fa37698864779c0d4cf08` |
-| 커밋 SHA | `8809b273c278a813a47fa37698864779c0d4cf08` |
-| 업스트림 버전 | `2.17.0-dev.1` (package.json) |
-| 가져온 방법 | clone+stage |
-| 동기화 시각 | 2026-09-23T05:01:02Z |
-| 파일 수 / 크기 | 71 / 2468 KB |
+| 요청 참조 | `v3.0.1` |
+| 커밋 SHA | `2ab3cae7ac2c2a55d7386ca789d03c4fcd31816c` |
+| 업스트림 버전 | `3.0.1` (package.json) |
+| 가져온 방법 | release-zip |
+| 동기화 시각 | 2026-10-12T00:55:14Z |
+| 파일 수 / 크기 | 98 / 3628 KB |
 | 라이선스 | MIT (`LICENSE`), 서드파티 고지 `THIRD_PARTY_NOTICES.md`, 폰트 `assets/JetBrainsMono-OFL.txt` |
 
 ## 업스트림 배포본에서 제외한 파일
