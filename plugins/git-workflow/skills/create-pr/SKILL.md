@@ -231,24 +231,31 @@ git rev-parse --abbrev-ref <source>@{u}
 - upstream이 설정되지 않았거나 로컬이 리모트보다 앞서 있으면 push 여부를 사용자에게 확인한다
 - 확인 후 `git push -u origin <source>` 실행
 
-### 8. PR 생성
+### 8. PR 생성 — Draft 로 만들고 메타데이터를 채운 뒤 Ready 로 전환
 
-```
-gh pr create --title "<제목>" --body "<설명>" --head <source> --base <target-branch> --assignee <assignee> [--reviewer <reviewer>] [--label <label>]
+`gh pr create` 는 PR 을 먼저 만들고 assignee·reviewer·label 을 나중에 붙이므로, 생성 알림에는
+이들이 비어 보인다. 그래서 Draft 로 만들고 다 붙은 뒤 Ready 로 전환한다.
+
+```bash
+gh pr create --draft --title "<제목>" --body "<설명>" --head <source> --base <target-branch> --assignee <assignee> [--reviewer <reviewer>] [--label <label>]
+gh pr view <PR URL> --json assignees,reviewRequests,labels   # 빠진 항목은 gh pr edit 로 채운다
+gh pr ready <PR URL>                                          # 다 붙은 뒤에만 실행
 ```
 
+- assignee·reviewer·label 이 모두 없으면 `--draft` 없이 바로 생성한다. 자동 판단 라벨(모듈·`ROOT`·`AI`)은
+  알림에 안 보이므로 이 판단에서 제외한다
+- Draft 미지원 저장소라는 에러가 나면 사용자에게 알리고 `--draft` 없이 생성한다
 - `--head`로 소스 브랜치를 명시한다 (`--source` 미지정 시 현재 브랜치)
 - 머지 시 소스 브랜치 자동 삭제는 PR 옵션이 아니라 **저장소 설정**이다 — 미설정이면 1회만 실행: `gh api -X PATCH 'repos/{owner}/{repo}' -F delete_branch_on_merge=true`
 - squash 여부는 머지 시점에 정한다 — 커밋 이력 보존을 위해 merge commit 방식을 기본으로 안내한다
 - `--title`/`--body` 를 모두 지정하므로 에디터가 열리지 않는다
 - label 은 저장소에 존재해야 한다 — 없다는 에러가 나면 `gh label create <이름>` 후 재시도한다
-- assignee는 항상 포함 (`.claude/plugins.json` 기본값 또는 사용자 지정)
-- reviewer는 항상 포함 (`.claude/plugins.json` 기본값 또는 `-r` 옵션으로 오버라이드 가능)
-- label은 항상 포함 (기본값: `D-5`, `-l` 옵션으로 오버라이드 가능)
+- assignee·reviewer·label 은 6단계에서 정해진 값을 넣는다 (옵션 > `.claude/plugins.json` 기본값 > 질문)
 
 ### 9. 결과 출력
 
 - 생성된 PR의 URL을 출력한다
+- Draft 로 남았다면 그 이유를 알린다
 - `gh pr view --web` 안내를 함께 제공한다
 
 ### 10. Worktree 정리 (`--source` 사용 시)

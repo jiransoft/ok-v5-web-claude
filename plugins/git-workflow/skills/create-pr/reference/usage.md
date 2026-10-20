@@ -53,7 +53,8 @@
   5. 템플릿 선택(feature/default) → PR 본문·제목 작성 → 사용자 확인
   6. Assignee/Reviewer 결정
   7. 리모트에 push → 사용자 확인
-  8. gh pr create로 PR 생성 (타겟 브랜치를 base로 PR 생성)
+  8. Draft로 PR 생성 → assignee/reviewer/label 지정 → Ready 전환
+     (지정할 값이 없으면 바로 생성)
   9. PR URL 출력
 
 사전 조건:
