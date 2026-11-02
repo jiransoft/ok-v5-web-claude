@@ -34,6 +34,7 @@ Jira 이슈를 조회하고, 코드베이스를 분석하여 확인 근거, 수�
 - (프로젝트 키 설정은 필요 없다 — 인자로 받은 이슈 키/URL 이 프로젝트를 결정하고, 인증은 사이트 단위다)
 - **email** — Atlassian 계정 이메일
 - **apiTokenFile** — API 토큰 파일 경로 (예: `~/.jira-token`)
+- **transitions** (선택) — 전환 또는 도착 상태 이름 고정. 이 스킬은 `review` 를 쓴다 (7단계). 없으면 카테고리로 판별한다
 
 > **토큰 발급**: Atlassian API 토큰은 https://id.atlassian.com/manage-profile/security/api-tokens 에서 발급받아 `~/.jira-token` 파일로 저장한다.
 
@@ -259,23 +260,12 @@ curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/2/issue/{이슈키}/commen
 
 ### 7. 이슈 상태 전환 ('확인중')
 
-댓글 등록 후 이슈 상태를 '확인중'으로 전환한다.
+댓글 등록 후 목표 키 **`review`** 로 전환한다. 전환 고르기·실행·재확인은
+[../../reference/status-transition.md](../../reference/status-transition.md) 를 읽고 그대로 따른다.
+전환 이름으로 직접 찾지 않는다. `review` 는 `inProgress` 와 카테고리가 같으므로, 관용 이름에 걸리는
+후보가 없으면 전환하지 않는다.
 
-먼저 가능한 전환 목록을 조회한다:
-
-```bash
-curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/{이슈키}/transitions"
-```
-
-응답에서 name이 "확인중"인 전환의 `id`를 찾아 전환을 실행한다:
-
-```bash
-curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/3/issue/{이슈키}/transitions" \
-  -H "Content-Type: application/json" \
-  -d '{"transition": {"id": "{확인중 전환 id}"}}'
-```
-
-"확인중" 전환이 없으면 (현재 상태에서 전환 불가) 경고를 출력하고 다음 단계로 진행한다.
+전환하지 못해도 경고만 내고 다음 단계로 진행한다.
 
 ### 8. AI 라벨 추가
 
@@ -304,7 +294,7 @@ git worktree remove /tmp/wt-{이슈키}
 - 요약: {이슈 요약}
 - 원인: {한 줄 요약}
 - 댓글: 등록 완료
-- 상태: 확인중으로 전환 (또는 전환 불가 시 사유)
+- 상태: {재확인한 실제 상태명} (전환하지 못했으면 사유)
 - 라벨: AI 추가
 - 분석 브랜치: {브랜치명} (--source 사용 시)
 ```
@@ -322,5 +312,5 @@ git worktree remove /tmp/wt-{이슈키}
 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
 **권고 대상:**
-- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `baseUrl`, `email`, `apiTokenFile`
+- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `baseUrl`, `email`, `apiTokenFile`. 7단계에서 전환을 사용자가 골랐거나 후보를 못 찾았다면 `transitions.review` 를 함께 권고한다
 - **제외**: CLI 인자로 받은 값(이슈 키/URL), AI 가 자동 판단한 값 (원인 분석 결과, 댓글 본문)
