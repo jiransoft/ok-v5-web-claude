@@ -35,6 +35,7 @@ Jira 이슈를 조회하고, 코드베이스를 분석하여 TDD 방식으로 �
 - **baseUrl** — Atlassian URL (예: `https://xxx.atlassian.net`)
 - **email** — Atlassian 계정 이메일 (REST API 인증용)
 - **apiTokenFile** — API 토큰 파일 경로 (예: `~/.jira-token`)
+- **transitions** (선택) — 전환 또는 도착 상태 이름 고정. 이 스킬은 `inProgress` · `review` 를 쓴다 (6·11단계). 없으면 카테고리로 판별한다
 
 > **토큰 생성**: https://id.atlassian.com/manage-profile/security/api-tokens 에서 API 토큰을 생성한 뒤, `apiTokenFile` 경로에 저장한다.
 
@@ -221,23 +222,11 @@ AskUserQuestion으로 계획 승인을 받는다. 사용자가 수정을 요청�
 
 ### 6. 이슈 상태 전환 ('진행 중')
 
-구현 시작 전에 이슈 상태를 '진행 중'으로 전환한다.
+구현 시작 전에 목표 키 **`inProgress`** 로 전환한다. 전환 고르기·실행·재확인은
+[../../reference/status-transition.md](../../reference/status-transition.md) 를 읽고 그대로 따른다.
+전환 이름으로 직접 찾지 않는다.
 
-가능한 전환 목록을 조회한다:
-
-```bash
-curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/{이슈키}/transitions"
-```
-
-응답에서 name이 "진행 중"인 전환의 `id`를 찾아 전환을 실행한다:
-
-```bash
-curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/3/issue/{이슈키}/transitions" \
-  -H "Content-Type: application/json" \
-  -d '{"transition": {"id": "{진행 중 전환 id}"}}'
-```
-
-"진행 중" 전환이 없으면 (이미 진행 중이거나 전환 불가) 경고를 출력하고 다음 단계로 진행한다.
+전환하지 못해도 경고만 내고 다음 단계로 진행한다.
 
 ### 7. TDD 구현
 
@@ -386,21 +375,11 @@ curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/2/issue/{이슈키}/commen
 
 ### 11. 이슈 상태 전환 ('확인중')
 
-가능한 전환 목록을 조회한다:
+목표 키 **`review`** 로 전환한다. 6단계와 같은 규약
+([../../reference/status-transition.md](../../reference/status-transition.md))을 따른다.
+`review` 는 `inProgress` 와 카테고리가 같으므로, 관용 이름에 걸리는 후보가 없으면 전환하지 않는다.
 
-```bash
-curl -s -u "$email:$token" "$baseUrl/rest/api/3/issue/{이슈키}/transitions"
-```
-
-응답에서 name이 "확인중"인 전환의 `id`를 찾아 전환을 실행한다:
-
-```bash
-curl -s -u "$email:$token" -X POST "$baseUrl/rest/api/3/issue/{이슈키}/transitions" \
-  -H "Content-Type: application/json" \
-  -d '{"transition": {"id": "{확인중 전환 id}"}}'
-```
-
-"확인중" 전환이 없으면 (현재 상태에서 전환 불가) 경고를 출력하고 다음 단계로 진행한다.
+전환하지 못해도 경고만 내고 다음 단계로 진행한다.
 
 ### 12. AI 라벨 추가
 
@@ -434,7 +413,7 @@ git worktree remove /tmp/wt-{이슈키}
 - 브랜치: {prefix}/{이슈키} (--source 사용 시)
 - 테스트: 전체 통과
 - 댓글: 등록 완료
-- 상태: 진행 중 → 확인중 (또는 전환 불가 시 사유)
+- 상태: {6단계 결과} → {11단계 결과} (재확인한 실제 상태명. 전환하지 못했으면 사유)
 - 라벨: AI 추가
 ```
 
@@ -454,5 +433,5 @@ git worktree remove /tmp/wt-{이슈키}
 안내 블록을 출력한다. 모든 값을 plugins.json 에서 얻었으면 생략한다.
 
 **권고 대상:**
-- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `baseUrl`, `email`, `apiTokenFile`
+- **포함**: AskUserQuestion 으로 받은 값 (다음부터 자동 처리되려면 plugins.json 에 저장 필요). 예: `baseUrl`, `email`, `apiTokenFile`. 6·11단계에서 전환을 사용자가 골랐거나 후보를 못 찾았다면 `transitions` 의 해당 키를 함께 권고한다
 - **제외**: CLI 인자로 받은 값(이슈 키/URL), AI 가 자동 판단한 값 (구현 내용, 코드 변경, 커밋 메시지)
